@@ -1,0 +1,6 @@
+/target
+
+storage/logs
+storage/temp
+
+.env
