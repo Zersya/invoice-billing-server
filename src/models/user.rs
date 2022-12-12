@@ -1,4 +1,3 @@
-use argon2::{Config, ThreadMode, Variant, Version};
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;

@@ -32,6 +32,14 @@ impl DefaultResponse {
         }
     }
 
+    pub fn ok(message: &str) -> Self {
+        Self::new("ok", message.to_string())
+    }
+
+    pub fn error(message: &str) -> Self {
+        Self::new("error", message.to_string())
+    }
+
     pub fn with_access_token(mut self, access_token: String) -> Self {
         self.access_token = Some(access_token);
         self

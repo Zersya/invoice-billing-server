@@ -1,4 +1,3 @@
-use argon2::{Config, ThreadMode, Variant, Version};
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -16,6 +15,26 @@ pub struct OauthAccessToken {
 }
 
 impl OauthAccessToken {
+    pub async fn get_by_access_token(
+        db: &sqlx::PgPool,
+        access_token: &str,
+    ) -> Result<OauthAccessToken, sqlx::Error> {
+        let oauth_access_token = sqlx::query_as!(
+            OauthAccessToken,
+            r#"
+            SELECT *
+            FROM oauth_access_tokens
+            WHERE access_token = $1 AND revoked_at IS NULL AND expires_at > $2
+            "#,
+            access_token,
+            chrono::Utc::now().naive_utc(),
+        )
+        .fetch_one(db)
+        .await?;
+
+        Ok(oauth_access_token)
+    }
+
     pub async fn create(
         db: &sqlx::PgPool,
         access_token: String,
@@ -41,7 +60,7 @@ impl OauthAccessToken {
         Ok(oauth_access_token)
     }
 
-    pub async fn delete (
+    pub async fn delete(
         db: &sqlx::PgPool,
         access_token: String,
     ) -> Result<OauthAccessToken, sqlx::Error> {
@@ -62,7 +81,7 @@ impl OauthAccessToken {
         Ok(oauth_access_token)
     }
 
-    pub async fn get_by_user_id (
+    pub async fn get_by_user_id(
         db: &sqlx::PgPool,
         user_id: Uuid,
     ) -> Result<OauthAccessToken, sqlx::Error> {
@@ -82,7 +101,7 @@ impl OauthAccessToken {
         Ok(oauth_access_tokens)
     }
 
-    pub async fn get_count_by_user_id (
+    pub async fn get_count_by_user_id(
         db: &sqlx::PgPool,
         user_id: Uuid,
     ) -> Result<i64, sqlx::Error> {
@@ -103,4 +122,10 @@ impl OauthAccessToken {
             None => Ok(0),
         }
     }
+}
+
+
+pub fn is_expired(expires_at: &NaiveDateTime) -> bool {
+    let now = chrono::Utc::now().naive_utc();
+    now > *expires_at
 }

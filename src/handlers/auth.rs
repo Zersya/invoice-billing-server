@@ -56,7 +56,7 @@ pub async fn register(
         Err(err) => return Err(err),
     };
 
-    let body = DefaultResponse::new("ok", "register successfully".to_string())
+    let body = DefaultResponse::ok("register successfully")
         .with_access_token(token.access_token)
         .with_data(json!(user));
 
@@ -103,7 +103,7 @@ pub async fn login(
         Err(err) => return Err(err),
     };
 
-    let body = DefaultResponse::new("ok", "login successfully".to_string())
+    let body = DefaultResponse::ok("login successfully")
         .with_access_token(token.access_token)
         .with_data(json!(user));
 

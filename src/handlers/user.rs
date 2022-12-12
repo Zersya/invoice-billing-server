@@ -9,7 +9,7 @@ pub async fn hello_world() -> Html<&'static str> {
     Html("<h1>Hello, World!</h1>")
 }
 
-pub async fn user_list(State(db): State<PgPool>,) -> impl IntoResponse {
+pub async fn get_users(State(db): State<PgPool>,) -> impl IntoResponse {
     
     let users = User::get_all(db).await.unwrap();
 

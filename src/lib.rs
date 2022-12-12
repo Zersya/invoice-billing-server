@@ -1,17 +1,26 @@
 use std::net::SocketAddr;
 
-use axum::{routing::{get, post, put, patch, delete}, Router};
+use axum::{
+    routing::{delete, get, patch, post, put},
+    Router,
+};
 
 use dotenvy::dotenv;
 use sqlx::postgres::PgPoolOptions;
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 mod config;
-mod handlers;
-mod models;
 mod errors;
+mod handlers;
 mod logger;
+mod middlewares;
+mod models;
 
 pub async fn axum() {
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::fmt::layer())
+        .init();
+
     dotenv().ok();
 
     let config = config::Config::from_env().unwrap();
@@ -24,17 +33,23 @@ pub async fn axum() {
 
     // sqlx::migrate!().run(&pool).await.expect("Failed to migrate the database");
 
+    let middleware = axum::middleware::from_fn_with_state(
+        pool.clone(),
+        middlewares::authentication::check_authentication,
+    );
+
     let app = Router::with_state(pool)
-        .route("/", get(handlers::user::hello_world))
-        .route("/register", post(handlers::auth::register))
+        .route("/users", get(handlers::user::get_users))
+        .route_layer(middleware)
         .route("/login", post(handlers::auth::login))
-        .route("/users", get(handlers::user::user_list));
-        
+        .route("/register", post(handlers::auth::register))
+        .route("/", get(handlers::user::hello_world));
+
     let host = &config.server.as_ref().unwrap().host;
     let port = &config.server.as_ref().unwrap().port;
     let addr = format!("{}:{}", host, port).parse::<SocketAddr>().unwrap();
 
-    println!("listening on {}", addr);
+    tracing::debug!("listening on {}", addr);
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await

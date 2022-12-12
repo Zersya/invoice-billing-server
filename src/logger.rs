@@ -26,3 +26,13 @@ impl Logger {
         std::io::Write::write_all(&mut file, content.as_bytes()).unwrap();
     }
 }
+
+pub struct LoggerLayer {
+    pub content: String,
+}
+
+impl LoggerLayer {
+    pub fn new(content: String) -> Self {
+        Self { content }
+    }
+}
