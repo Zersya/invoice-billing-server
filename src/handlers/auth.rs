@@ -60,7 +60,7 @@ pub async fn register(
         .with_access_token(token.access_token)
         .with_data(json!(user));
 
-    Ok(body.into_response())
+    Ok(body.into_json())
 }
 
 pub async fn login(
@@ -107,7 +107,7 @@ pub async fn login(
         .with_access_token(token.access_token)
         .with_data(json!(user));
 
-    Ok(body.into_response())
+    Ok(body.into_json())
 }
 
 async fn set_access_token(

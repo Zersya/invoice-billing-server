@@ -1,12 +1,12 @@
 use axum::Json;
 use serde::{Deserialize, Serialize};
-use serde_json::{Value, json};
+use serde_json::{json, Value};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DefaultResponse {
     pub status: String,
-    pub message: String,
-    
+    pub message: Message,
+
     #[serde(skip_serializing_if = "Option::is_none")]
     pub access_token: Option<String>,
 
@@ -17,12 +17,18 @@ pub struct DefaultResponse {
     pub errors: Option<serde_json::Value>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub meta: Option<serde_json::Value>
+    pub meta: Option<serde_json::Value>,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Message {
+    pub value: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub debug: Option<String>,
+}
 
 impl DefaultResponse {
-    pub fn new(status: &str, message: String) -> Self {
+    pub fn new(status: &str, message: Message) -> Self {
         let status = status.to_string();
         Self {
             status,
@@ -30,16 +36,38 @@ impl DefaultResponse {
             access_token: None,
             data: None,
             errors: None,
-            meta: None
+            meta: None,
         }
     }
 
     pub fn ok(message: &str) -> Self {
-        Self::new("ok", message.to_string())
+        Self::new(
+            "ok",
+            Message {
+                value: message.to_string(),
+                debug: None,
+            },
+        )
     }
 
-    pub fn error(message: &str) -> Self {
-        Self::new("error", message.to_string())
+    pub fn created(message: &str) -> Self {
+        Self::new(
+            "created",
+            Message {
+                value: message.to_string(),
+                debug: None,
+            },
+        )
+    }
+
+    pub fn error(message: &str, debug: String) -> Self {
+        Self::new(
+            "error",
+            Message {
+                value: message.to_string(),
+                debug: Some(debug),
+            },
+        )
     }
 
     pub fn with_access_token(mut self, access_token: String) -> Self {
@@ -57,12 +85,12 @@ impl DefaultResponse {
         self
     }
 
-//    pub fn with_meta(mut self, meta: serde_json::Value) -> Self {
-//        self.meta = Some(meta);
-//        self
-//    }
+    //    pub fn with_meta(mut self, meta: serde_json::Value) -> Self {
+    //        self.meta = Some(meta);
+    //        self
+    //    }
 
-    pub fn into_response(self) -> Json<Value> {
+    pub fn into_json(self) -> Json<Value> {
         Json(json!(self))
     }
 }

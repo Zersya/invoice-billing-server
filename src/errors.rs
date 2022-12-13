@@ -6,7 +6,7 @@ use axum::{
 use serde_json::json;
 use validator::{Validate, ValidationError, ValidationErrors};
 
-use crate::models::responses::DefaultResponse;
+use crate::models::responses::{DefaultResponse, Message};
 
 #[derive(Debug)]
 pub struct Errors {
@@ -64,7 +64,14 @@ impl IntoResponse for Errors {
             }
         }
 
-        let body = DefaultResponse::new("error", error_message).with_errors(errors);
+        let body = DefaultResponse::new(
+            "error",
+            Message {
+                value: error_message,
+                debug: None,
+            },
+        )
+        .with_errors(errors);
         let response = Json(json!(body));
 
         (StatusCode::UNPROCESSABLE_ENTITY, response).into_response()

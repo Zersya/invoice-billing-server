@@ -1,42 +1,56 @@
-use crate::models::requests::merchant::RequestUpdateMerchant;
-use crate::{errors::Errors, models::requests::merchant::RequestCreateMerchant};
 use crate::models::merchant::Merchant;
+use crate::models::requests::merchant::RequestUpdateMerchant;
 use crate::models::responses::DefaultResponse;
-use axum::Extension;
+use crate::{models::requests::merchant::RequestCreateMerchant};
 use axum::extract::Path;
+use axum::response::{IntoResponse, Response};
+use axum::Extension;
 use axum::{extract::State, response::Json};
-use serde_json::{json, Value};
+use reqwest::StatusCode;
+use serde_json::{json};
 use sqlx::PgPool;
 use uuid::Uuid;
 
 pub async fn get_by_authenticated(
     State(db): State<PgPool>,
     Extension(user_id): Extension<Uuid>,
-) -> Result<Json<Value>, Errors> {
+) -> Response {
     let merchants = match Merchant::get_by_user_id(&db, user_id).await {
         Ok(merchants) => merchants,
-        Err(_) => return Err(Errors::new(&[("user id", "not found")])),
+        Err(err) => {
+            let body = DefaultResponse::error("get merchants failed", err.to_string()).into_json();
+
+            return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+        }
     };
 
-    let body =
-        DefaultResponse::ok("get merchants by authenticated user success").with_data(json!(merchants));
+    let body = DefaultResponse::ok("get merchants by authenticated user success")
+        .with_data(json!(merchants))
+        .into_json();
 
-    Ok(body.into_response())
+    (StatusCode::OK, body).into_response()
 }
 
 pub async fn create(
     State(db): State<PgPool>,
     Extension(user_id): Extension<Uuid>,
     Json(body): Json<RequestCreateMerchant>,
-) -> Result<Json<Value>, Errors> {
+) -> Response {
     let merchant = match Merchant::create(&db, &body.name, &body.description, user_id).await {
         Ok(merchant) => merchant,
-        Err(_) => return Err(Errors::new(&[("create merchant", "failed")])),
+        Err(err) => {
+            let body =
+                DefaultResponse::error("create merchant failed", err.to_string()).into_json();
+
+            return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+        }
     };
 
-    let body = DefaultResponse::ok("create merchant success").with_data(json!(merchant));
+    let body = DefaultResponse::ok("create merchant success")
+        .with_data(json!(merchant))
+        .into_json();
 
-    Ok(body.into_response())
+    (StatusCode::CREATED, body).into_response()
 }
 
 pub async fn update(
@@ -44,28 +58,41 @@ pub async fn update(
     Extension(user_id): Extension<Uuid>,
     Path((merchant_id,)): Path<(Uuid,)>,
     Json(body): Json<RequestUpdateMerchant>,
-) -> Result<Json<Value>, Errors> {
-    let merchant = match Merchant::update(&db, merchant_id, &body.name, &body.description, user_id).await {
-        Ok(merchant) => merchant,
-        Err(_) => return Err(Errors::new(&[("update merchant", "failed")])),
-    };
+) -> Response {
+    let merchant =
+        match Merchant::update(&db, merchant_id, &body.name, &body.description, user_id).await {
+            Ok(merchant) => merchant,
+            Err(err) => {
+                let body =
+                    DefaultResponse::error("update merchant failed", err.to_string()).into_json();
 
-    let body = DefaultResponse::ok("update merchant success").with_data(json!(merchant));
+                return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+            }
+        };
 
-    Ok(body.into_response())
+    let body = DefaultResponse::ok("update merchant success")
+        .with_data(json!(merchant))
+        .into_json();
+
+    (StatusCode::OK, body).into_response()
 }
 
 pub async fn delete(
     State(db): State<PgPool>,
     Extension(user_id): Extension<Uuid>,
     Path((merchant_id,)): Path<(Uuid,)>,
-) -> Result<Json<Value>, Errors> {
+) -> Response {
     match Merchant::delete(&db, merchant_id, user_id).await {
         Ok(_) => (),
-        Err(_) => return Err(Errors::new(&[("delete merchant", "failed")])),
+        Err(err) => {
+            let body =
+                DefaultResponse::error("delete merchant failed", err.to_string()).into_json();
+
+            return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+        }
     };
 
-    let body = DefaultResponse::ok("delete merchant success");
+    let body = DefaultResponse::ok("delete merchant success").into_json();
 
-    Ok(body.into_response())
+    (StatusCode::OK, body).into_response()
 }
