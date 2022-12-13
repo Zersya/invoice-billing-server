@@ -18,7 +18,7 @@ impl Merchant {
         db: &sqlx::PgPool,
         name: &String,
         description: &String,
-        user_id: Uuid,
+        user_id: &Uuid,
     ) -> Result<Merchant, sqlx::Error> {
         let merchant = sqlx::query_as!(
             Merchant,
@@ -42,7 +42,7 @@ impl Merchant {
         id: Uuid,
         name: &String,
         description: &String,
-        user_id: Uuid,
+        user_id: &Uuid,
     ) -> Result<Merchant, sqlx::Error> {
         let merchant = sqlx::query_as!(
             Merchant,
@@ -66,7 +66,7 @@ impl Merchant {
     pub async fn delete (
         db: &sqlx::PgPool,
         id: Uuid,
-        user_id: Uuid,
+        user_id: &Uuid,
     ) -> Result<Merchant, sqlx::Error> {
         let merchant = sqlx::query_as!(
             Merchant,
@@ -87,7 +87,7 @@ impl Merchant {
 
     pub async fn get_by_user_id(
         db: &sqlx::PgPool,
-        user_id: Uuid,
+        user_id: &Uuid,
     ) -> Result<Vec<Merchant>, sqlx::Error> {
         let merchants = sqlx::query_as!(
             Merchant,

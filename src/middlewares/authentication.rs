@@ -4,8 +4,6 @@ use axum::{
     http::Request,
     middleware::Next,
     response::Response,
-    Router,
-    ServiceExt,
 };
 use sqlx::PgPool;
 

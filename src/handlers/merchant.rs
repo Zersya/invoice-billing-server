@@ -15,7 +15,7 @@ pub async fn get_by_authenticated(
     State(db): State<PgPool>,
     Extension(user_id): Extension<Uuid>,
 ) -> Response {
-    let merchants = match Merchant::get_by_user_id(&db, user_id).await {
+    let merchants = match Merchant::get_by_user_id(&db, &user_id).await {
         Ok(merchants) => merchants,
         Err(err) => {
             let body = DefaultResponse::error("get merchants failed", err.to_string()).into_json();
@@ -36,7 +36,7 @@ pub async fn create(
     Extension(user_id): Extension<Uuid>,
     Json(body): Json<RequestCreateMerchant>,
 ) -> Response {
-    let merchant = match Merchant::create(&db, &body.name, &body.description, user_id).await {
+    let merchant = match Merchant::create(&db, &body.name, &body.description, &user_id).await {
         Ok(merchant) => merchant,
         Err(err) => {
             let body =
@@ -60,7 +60,7 @@ pub async fn update(
     Json(body): Json<RequestUpdateMerchant>,
 ) -> Response {
     let merchant =
-        match Merchant::update(&db, merchant_id, &body.name, &body.description, user_id).await {
+        match Merchant::update(&db, merchant_id, &body.name, &body.description, &user_id).await {
             Ok(merchant) => merchant,
             Err(err) => {
                 let body =
@@ -82,7 +82,7 @@ pub async fn delete(
     Extension(user_id): Extension<Uuid>,
     Path((merchant_id,)): Path<(Uuid,)>,
 ) -> Response {
-    match Merchant::delete(&db, merchant_id, user_id).await {
+    match Merchant::delete(&db, merchant_id, &user_id).await {
         Ok(_) => (),
         Err(err) => {
             let body =

@@ -41,12 +41,28 @@ pub async fn axum() {
     let app = Router::with_state(pool)
         .route("/users", get(handlers::user::get_users))
         .route(
+            "/merchant/:id/customer/:id",
+            patch(handlers::customer::update).delete(handlers::customer::delete),
+        )
+        .route(
+            "/merchant/:id/customer/all",
+            get(handlers::customer::get_by_authenticated),
+        )
+        .route(
+            "/merchant/:id/customer",
+            get(handlers::customer::get_by_merchant_id).post(handlers::customer::create),
+        )
+        .route(
             "/merchant/:id",
             patch(handlers::merchant::update).delete(handlers::merchant::delete),
         )
         .route(
             "/merchant",
             get(handlers::merchant::get_by_authenticated).post(handlers::merchant::create),
+        )
+        .route(
+            "/contact-channels",
+            get(handlers::customer::get_contact_channels),
         )
         .route_layer(middleware)
         .route("/login", post(handlers::auth::login))
