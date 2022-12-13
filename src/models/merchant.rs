@@ -42,18 +42,42 @@ impl Merchant {
         id: Uuid,
         name: &String,
         description: &String,
+        user_id: Uuid,
     ) -> Result<Merchant, sqlx::Error> {
         let merchant = sqlx::query_as!(
             Merchant,
             r#"
             UPDATE merchants
             SET name = $1, description = $2
-            WHERE id = $3
+            WHERE id = $3 AND user_id = $4 AND deleted_at IS NULL
             RETURNING *
             "#,
             name,
             description,
-            id
+            id,
+            user_id
+        )
+        .fetch_one(db)
+        .await?;
+
+        Ok(merchant)
+    }
+
+    pub async fn delete (
+        db: &sqlx::PgPool,
+        id: Uuid,
+        user_id: Uuid,
+    ) -> Result<Merchant, sqlx::Error> {
+        let merchant = sqlx::query_as!(
+            Merchant,
+            r#"
+            UPDATE merchants
+            SET deleted_at = NOW()
+            WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL
+            RETURNING *
+            "#,
+            id,
+            user_id
         )
         .fetch_one(db)
         .await?;
@@ -69,7 +93,7 @@ impl Merchant {
             Merchant,
             r#"
             SELECT * FROM merchants
-            WHERE user_id = $1
+            WHERE user_id = $1 AND deleted_at IS NULL
             "#,
             user_id
         )

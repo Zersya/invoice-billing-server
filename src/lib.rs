@@ -40,6 +40,14 @@ pub async fn axum() {
 
     let app = Router::with_state(pool)
         .route("/users", get(handlers::user::get_users))
+        .route(
+            "/merchant/:id",
+            patch(handlers::merchant::update).delete(handlers::merchant::delete),
+        )
+        .route(
+            "/merchant",
+            get(handlers::merchant::get_by_authenticated).post(handlers::merchant::create),
+        )
         .route_layer(middleware)
         .route("/login", post(handlers::auth::login))
         .route("/register", post(handlers::auth::register))

@@ -6,6 +6,8 @@ use serde_json::{Value, json};
 pub struct DefaultResponse {
     pub status: String,
     pub message: String,
+    
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub access_token: Option<String>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
