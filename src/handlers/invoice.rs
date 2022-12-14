@@ -62,7 +62,7 @@ pub async fn create(
         }
     };
 
-    let body = DefaultResponse::ok("create invoice success")
+    let body = DefaultResponse::created("create invoice success")
         .with_data(json!(invoice))
         .into_json();
 

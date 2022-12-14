@@ -7,24 +7,27 @@ use crate::models::user::User;
 use argon2::{self, Config};
 use argon2::{ThreadMode, Variant, Version};
 
+use axum::response::{IntoResponse, Response};
 use axum::{extract::State, response::Json};
 use crypto_hash::{hex_digest, Algorithm};
+use reqwest::StatusCode;
 use serde_json::{json, Value};
 use sqlx::PgPool;
 
-pub async fn register(
-    State(db): State<PgPool>,
-    Json(payload): Json<RequestRegister>,
-) -> Result<Json<Value>, Errors> {
+pub async fn register(State(db): State<PgPool>, Json(payload): Json<RequestRegister>) -> Response {
     let mut extractor = FieldValidator::validate(&payload);
 
     let name = extractor.extract("name", Some(payload.name));
     let email = extractor.extract("email", Some(payload.email));
     let password = extractor.extract("password", Some(payload.password));
-    extractor.check()?;
+    extractor.check();
 
     match User::get_by_email(&db, &email).await {
-        Ok(_) => return Err(Errors::new(&[("email", "already exists")])),
+        Ok(err) => {
+            let body = DefaultResponse::error("Email already exist", err.email).into_json();
+
+            return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+        }
         Err(_) => (),
     }
 
@@ -48,30 +51,32 @@ pub async fn register(
 
     let user = match User::create(&db, &name, &email, &hash).await {
         Ok(user) => user,
-        Err(_) => return Err(Errors::new(&[("create user", "failed")])),
+        Err(err) => {
+            let body = DefaultResponse::error("register failed", err.to_string()).into_json();
+
+            return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+        }
     };
 
     let token = match set_access_token(&db, &user, &salt).await {
         Ok(token) => token,
-        Err(err) => return Err(err),
+        Err(err) => return (StatusCode::UNPROCESSABLE_ENTITY, err.into_response()).into_response(),
     };
 
     let body = DefaultResponse::ok("register success")
         .with_access_token(token.access_token)
-        .with_data(json!(user));
+        .with_data(json!(user))
+        .into_json();
 
-    Ok(body.into_json())
+    (StatusCode::CREATED, body).into_response()
 }
 
-pub async fn login(
-    State(db): State<PgPool>,
-    Json(payload): Json<RequestLogin>,
-) -> Result<Json<Value>, Errors> {
+pub async fn login(State(db): State<PgPool>, Json(payload): Json<RequestLogin>) -> Response {
     let mut extractor = FieldValidator::validate(&payload);
 
     let email = extractor.extract("email", Some(payload.email));
     let password = extractor.extract("password", Some(payload.password));
-    extractor.check()?;
+    extractor.check();
 
     let salt = std::env::var("APPKEY").unwrap();
     let config = Config {
@@ -95,19 +100,24 @@ pub async fn login(
 
     let user = match User::login(&db, email, hash).await {
         Ok(user) => user,
-        Err(_) => return Err(Errors::new(&[("email or password", "invalid")])),
+        Err(err) => {
+            let body = DefaultResponse::error("login failed", err.to_string()).into_json();
+
+            return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+        }
     };
 
     let token = match set_access_token(&db, &user, &salt).await {
         Ok(token) => token,
-        Err(err) => return Err(err),
+        Err(err) => return (StatusCode::UNPROCESSABLE_ENTITY, err.into_response()).into_response(),
     };
 
     let body = DefaultResponse::ok("login success")
         .with_access_token(token.access_token)
-        .with_data(json!(user));
+        .with_data(json!(user))
+        .into_json();
 
-    Ok(body.into_json())
+    (StatusCode::OK, body).into_response()
 }
 
 async fn set_access_token(
