@@ -1,4 +1,12 @@
+extern crate cron;
+
+use axum::http::HeaderValue;
+use chrono::{Datelike, Timelike, Utc};
+use cron::Schedule;
+use reqwest::header;
 use std::net::SocketAddr;
+use std::time::Duration;
+use std::{str::FromStr, thread};
 
 use axum::{
     routing::{delete, get, patch, post, put},
@@ -32,7 +40,52 @@ pub async fn axum() {
         .await
         .expect("Failed to create pool database connection");
 
-    // sqlx::migrate!().run(&pool).await.expect("Failed to migrate the database");
+    let expression = "*/30 * * * * * *";
+    let schedule = Schedule::from_str(expression).unwrap();
+
+    tokio::spawn(async move {
+        let client = reqwest::Client::new();
+
+        loop {
+            let now = Utc::now();
+
+            let schedule = schedule.upcoming(Utc).take(1);
+            let datetime = schedule.last().unwrap();
+
+            // when different is less that 500 ms, then run the task
+            // this is to avoid task running before the time sleeps changes
+            if datetime.signed_duration_since(now).num_milliseconds() < 500 {
+                let host = std::env::var("WHATSAPP_BASE_URL").unwrap();
+                let whatsapp_api_key = std::env::var("WHATSAPP_API_KEY").unwrap();
+
+                let mut headers = reqwest::header::HeaderMap::new();
+                headers.append(
+                    "x-whatsapp-api-key",
+                    HeaderValue::from_str(&whatsapp_api_key.as_str()).unwrap(),
+                );
+
+                println!("Sending message... {}", host);
+                match client
+                    .post(format!("{}/api/send", host))
+                    .headers(headers)
+                    .query(&[("number", "6282218327767"), ("message", "Hello World")])
+                    .send()
+                    .await
+                {
+                    Ok(res) => res,
+                    Err(_) => {
+                        thread::sleep(Duration::from_secs(1));
+                        continue;
+                    }
+                };
+            }
+
+            println!("-> {}", now);
+            thread::sleep(Duration::from_secs(1));
+        }
+    });
+
+    thread::spawn(move || {});
 
     let auth_middleware = axum::middleware::from_fn_with_state(
         pool.clone(),
