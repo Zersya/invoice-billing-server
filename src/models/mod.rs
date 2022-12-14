@@ -6,3 +6,4 @@ pub mod merchant;
 pub mod customer;
 pub mod customer_contact_channel;
 pub mod contact_channel;
+pub mod invoice;

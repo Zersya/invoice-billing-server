@@ -63,7 +63,7 @@ impl Merchant {
         Ok(merchant)
     }
 
-    pub async fn delete (
+    pub async fn delete(
         db: &sqlx::PgPool,
         id: Uuid,
         user_id: &Uuid,
@@ -101,5 +101,20 @@ impl Merchant {
         .await?;
 
         Ok(merchants)
+    }
+
+    pub async fn get_by_id(db: &sqlx::PgPool, id: Uuid) -> Result<Merchant, sqlx::Error> {
+        let merchant = sqlx::query_as!(
+            Merchant,
+            r#"
+            SELECT * FROM merchants
+            WHERE id = $1 AND deleted_at IS NULL
+            "#,
+            id,
+        )
+        .fetch_one(db)
+        .await?;
+
+        Ok(merchant)
     }
 }

@@ -60,6 +60,16 @@ impl DefaultResponse {
         )
     }
 
+    pub fn unauthorized(message: &str, debug: Option<String>) -> Self {
+        Self::new(
+            "unauthorized",
+            Message {
+                value: message.to_string(),
+                debug,
+            },
+        )
+    }
+
     pub fn error(message: &str, debug: String) -> Self {
         Self::new(
             "error",

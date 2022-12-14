@@ -11,7 +11,7 @@ use serde_json::{json};
 use sqlx::PgPool;
 use uuid::Uuid;
 
-pub async fn get_by_authenticated(
+pub async fn get_by_authenticated_user(
     State(db): State<PgPool>,
     Extension(user_id): Extension<Uuid>,
 ) -> Response {

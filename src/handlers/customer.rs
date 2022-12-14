@@ -14,7 +14,7 @@ use crate::models::customer_contact_channel::CustomerContactChannel;
 use crate::models::requests::customer::{RequestCreateCustomer, RequestUpdateCustomer};
 use crate::models::responses::DefaultResponse;
 
-pub async fn get_by_authenticated(
+pub async fn get_by_authenticated_user(
     State(db): State<PgPool>,
     Extension(user_id): Extension<Uuid>,
 ) -> Response {

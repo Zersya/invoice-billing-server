@@ -15,6 +15,7 @@ mod handlers;
 mod logger;
 mod middlewares;
 mod models;
+mod utils;
 
 pub async fn axum() {
     tracing_subscriber::registry()
@@ -33,20 +34,27 @@ pub async fn axum() {
 
     // sqlx::migrate!().run(&pool).await.expect("Failed to migrate the database");
 
-    let middleware = axum::middleware::from_fn_with_state(
+    let auth_middleware = axum::middleware::from_fn_with_state(
         pool.clone(),
         middlewares::authentication::check_authentication,
     );
 
+    let merchant_middleware =
+        axum::middleware::from_fn_with_state(pool.clone(), middlewares::merchant::check_merchant);
+
     let app = Router::with_state(pool)
         .route("/users", get(handlers::user::get_users))
+        .route(
+            "/merchant/:id/invoice",
+            get(handlers::invoice::get_by_authenticated_user).post(handlers::invoice::create),
+        )
         .route(
             "/merchant/:id/customer/:id",
             patch(handlers::customer::update).delete(handlers::customer::delete),
         )
         .route(
             "/merchant/:id/customer/all",
-            get(handlers::customer::get_by_authenticated),
+            get(handlers::customer::get_by_authenticated_user),
         )
         .route(
             "/merchant/:id/customer",
@@ -56,15 +64,16 @@ pub async fn axum() {
             "/merchant/:id",
             patch(handlers::merchant::update).delete(handlers::merchant::delete),
         )
+        .route_layer(merchant_middleware)
         .route(
             "/merchant",
-            get(handlers::merchant::get_by_authenticated).post(handlers::merchant::create),
+            get(handlers::merchant::get_by_authenticated_user).post(handlers::merchant::create),
         )
         .route(
             "/contact-channels",
             get(handlers::customer::get_contact_channels),
         )
-        .route_layer(middleware)
+        .route_layer(auth_middleware)
         .route("/login", post(handlers::auth::login))
         .route("/register", post(handlers::auth::register))
         .route("/", get(handlers::user::hello_world));
