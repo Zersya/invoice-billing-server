@@ -7,3 +7,5 @@ pub mod customer;
 pub mod customer_contact_channel;
 pub mod contact_channel;
 pub mod invoice;
+pub mod job_schedule;
+pub mod job_queue;

@@ -1,15 +1,21 @@
 extern crate cron;
 
 use axum::http::HeaderValue;
-use chrono::{Datelike, Timelike, Utc};
+use chrono::Utc;
 use cron::Schedule;
-use reqwest::header;
+use errors::Errors;
+use models::customer_contact_channel::CustomerContactChannel;
+use models::job_queue::JobQueue;
+use models::job_schedule::JobSchedule;
+use reqwest::Error;
+use sqlx::PgPool;
 use std::net::SocketAddr;
 use std::time::Duration;
-use std::{str::FromStr, thread};
+use std::{str::FromStr};
+use tokio::time::interval;
 
 use axum::{
-    routing::{delete, get, patch, post, put},
+    routing::{delete, get, post, put},
     Router,
 };
 
@@ -35,6 +41,7 @@ pub async fn axum() {
     let config = config::Config::from_env().unwrap();
 
     let pool = PgPoolOptions::new()
+        .min_connections(config.pg.as_ref().unwrap().poolminsize)
         .max_connections(config.pg.as_ref().unwrap().poolmaxsize)
         .connect(config.database_url().as_ref())
         .await
@@ -43,49 +50,9 @@ pub async fn axum() {
     let expression = "*/30 * * * * * *";
     let schedule = Schedule::from_str(expression).unwrap();
 
-    tokio::spawn(async move {
-        let client = reqwest::Client::new();
+    spawn_job_queue(pool.clone(), schedule).await;
 
-        loop {
-            let now = Utc::now();
-
-            let schedule = schedule.upcoming(Utc).take(1);
-            let datetime = schedule.last().unwrap();
-
-            // when different is less that 500 ms, then run the task
-            // this is to avoid task running before the time sleeps changes
-            if datetime.signed_duration_since(now).num_milliseconds() < 500 {
-                let host = std::env::var("WHATSAPP_BASE_URL").unwrap();
-                let whatsapp_api_key = std::env::var("WHATSAPP_API_KEY").unwrap();
-
-                let mut headers = reqwest::header::HeaderMap::new();
-                headers.append(
-                    "x-whatsapp-api-key",
-                    HeaderValue::from_str(&whatsapp_api_key.as_str()).unwrap(),
-                );
-
-                println!("Sending message... {}", host);
-                match client
-                    .post(format!("{}/api/send", host))
-                    .headers(headers)
-                    .query(&[("number", "6282218327767"), ("message", "Hello World")])
-                    .send()
-                    .await
-                {
-                    Ok(res) => res,
-                    Err(_) => {
-                        thread::sleep(Duration::from_secs(1));
-                        continue;
-                    }
-                };
-            }
-
-            println!("-> {}", now);
-            thread::sleep(Duration::from_secs(1));
-        }
-    });
-
-    thread::spawn(move || {});
+    spawn_set_job_schedule_to_queue(pool.clone()).await;
 
     let auth_middleware = axum::middleware::from_fn_with_state(
         pool.clone(),
@@ -95,15 +62,19 @@ pub async fn axum() {
     let merchant_middleware =
         axum::middleware::from_fn_with_state(pool.clone(), middlewares::merchant::check_merchant);
 
-    let app = Router::with_state(pool)
+    let app = Router::with_state(pool.clone())
         .route("/users", get(handlers::user::get_users))
+        .route(
+            "/merchant/:id/invoice/:id/set-schedule",
+            put(handlers::invoice::set_invoice_scheduler),
+        )
         .route(
             "/merchant/:id/invoice",
             get(handlers::invoice::get_by_authenticated_user).post(handlers::invoice::create),
         )
         .route(
             "/merchant/:id/customer/:id",
-            patch(handlers::customer::update).delete(handlers::customer::delete),
+            put(handlers::customer::update).delete(handlers::customer::delete),
         )
         .route(
             "/merchant/:id/customer/all",
@@ -115,12 +86,12 @@ pub async fn axum() {
         )
         .route(
             "/merchant/:id",
-            patch(handlers::merchant::update).delete(handlers::merchant::delete),
+            put(handlers::merchant::update).delete(handlers::merchant::delete),
         )
         .route_layer(merchant_middleware)
         .route(
             "/merchant",
-            get(handlers::merchant::get_by_authenticated_user).post(handlers::merchant::create),
+            get(handlers::merchant::get_by_authenticated_user), // .post(handlers::merchant::create),
         )
         .route(
             "/contact-channels",
@@ -128,7 +99,7 @@ pub async fn axum() {
         )
         .route_layer(auth_middleware)
         .route("/login", post(handlers::auth::login))
-        .route("/register", post(handlers::auth::register))
+        // .route("/register", post(handlers::auth::register))
         .route("/", get(handlers::user::hello_world));
 
     let host = &config.server.as_ref().unwrap().host;
@@ -140,4 +111,243 @@ pub async fn axum() {
         .serve(app.into_make_service())
         .await
         .unwrap();
+}
+
+async fn spawn_job_queue(pool: PgPool, schedule: Schedule) {
+    tokio::spawn(async move {
+        let mut interval = interval(Duration::from_secs(1));
+
+        loop {
+            interval.tick().await;
+
+            let job = match JobQueue::get_top_priority_job(&pool).await {
+                Ok(job) => job,
+                Err(_) => {
+                    continue;
+                }
+            };
+
+            if job.job_schedule_id.is_some() {
+                JobSchedule::update_status(&pool, job.job_schedule_id.unwrap(), "in_progress")
+                    .await.expect("Failed to update job schedule status to in_progress");
+            }
+
+            JobQueue::update_status(&pool, &job.id, "in_progress")
+                .await
+                .expect("Failed to update job queue status to in_progress");
+
+
+            if job.job_data.is_none() {
+                JobQueue::update_status(&pool, &job.id, "failed")
+                        .await
+                        .expect("Failed to update job queue status to failed");
+                    
+                continue;
+            }
+
+            let job_data = match serde_json::from_value::<serde_json::Value>(job.job_data.unwrap())
+            {
+                Ok(job_data) => job_data,
+                Err(_) => {
+                    JobQueue::update_status(&pool, &job.id, "failed")
+                        .await
+                        .expect("Failed to update job queue status to failed");
+
+                    continue;
+                }
+            };
+
+            let customer_id = match job_data["customer_id"].as_str() {
+                Some(phone_number) => uuid::Uuid::parse_str(phone_number).unwrap(),
+                None => {
+                    JobQueue::update_status(&pool, &job.id, "failed")
+                        .await
+                        .expect("Failed to update job queue status to failed");
+                    
+                    continue;
+                }
+            };
+
+            let merchant_id = match job_data["merchant_id"].as_str() {
+                Some(merchant_id) => uuid::Uuid::parse_str(merchant_id).unwrap(),
+                None => {
+                    JobQueue::update_status(&pool, &job.id, "failed")
+                        .await
+                        .expect("Failed to update job queue status to failed");
+                    
+                    continue;
+                }
+            };
+
+            let amount = match job_data["amount"].as_i64() {
+                Some(amount) => amount.to_string(),
+                None => {
+                    JobQueue::update_status(&pool, &job.id, "failed")
+                        .await
+                        .expect("Failed to update job queue status to failed");
+                    
+                    continue;
+                }
+            };
+
+            let customer_contact_channels =
+                match CustomerContactChannel::get_customer_contact_channels_by_customer_and_merchant(
+                    &pool,
+                    &customer_id,
+                    &merchant_id,
+                ).await {
+                    Ok(customer_contact_channels) => customer_contact_channels,
+                    Err(_) => {
+                        JobQueue::update_status(&pool, &job.id, "failed")
+                        .await
+                        .expect("Failed to update job queue status to failed");
+                    
+                        continue;
+                    }
+                };
+
+            // This code finds the whatsapp contact channel, if it exists.
+            let whatsapp_contact_channel = match customer_contact_channels
+                .iter()
+                .find(|contact_channel| contact_channel.name == "whatsapp")
+            {
+                Some(whatsapp_contact_channel) => whatsapp_contact_channel,
+                None => {
+                    JobQueue::update_status(&pool, &job.id, "failed")
+                        .await
+                        .expect("Failed to update job queue status to failed");
+                    
+                    continue;
+                }
+            };
+
+            match whatsapp_send_message(whatsapp_contact_channel.value.as_str(), format!("The total amount due is {}. Please remit payment within 30 days to avoid late fees.", amount).as_str(), &schedule).await {
+                Ok(_) => {
+                    JobQueue::update_status(&pool, &job.id, "completed")
+                        .await
+                        .expect("Failed to update job queue status to completed");
+                
+                    ()
+                },
+                Err(_) => {
+                    JobQueue::update_status(&pool, &job.id, "failed")
+                        .await
+                        .expect("Failed to update job queue status to failed");
+                    
+                        continue;
+                }
+            }
+
+            if job.job_schedule_id.is_some() {
+                JobSchedule::update_status(&pool, job.job_schedule_id.unwrap(), "completed")
+                    .await
+                    .expect("Failed to update job schedule status to completed");
+            }
+        }
+    });
+}
+
+async fn spawn_set_job_schedule_to_queue(pool: PgPool) {
+    tokio::spawn(async move {
+        // Use an interval to perform the check at regular intervals.
+        let mut interval = interval(Duration::from_secs(15));
+
+        loop {
+            interval.tick().await;
+            set_job_schedule_to_queue(pool.clone()).await;
+        }
+    });
+}
+
+async fn whatsapp_send_message(
+    phone_number: &str,
+    message: &str,
+    schedule: &Schedule,
+) -> Result<(), Errors> {
+    let client = reqwest::Client::new();
+
+    let now = Utc::now();
+
+    let schedule = schedule.upcoming(Utc).take(1);
+    let datetime = schedule.last().unwrap();
+
+    println!("Datetime {}, Now {}", datetime, now);
+
+
+    // when different is less that 500 ms, then run the task
+    // this is to avoid task running before the time sleeps changes
+    if datetime >= now {
+        println!("Sending message... {} {}", phone_number, message);
+        let host = std::env::var("WHATSAPP_BASE_URL").unwrap();
+        let whatsapp_api_key = std::env::var("WHATSAPP_API_KEY").unwrap();
+
+        let mut headers = reqwest::header::HeaderMap::new();
+        headers.append(
+            "x-whatsapp-api-key",
+            HeaderValue::from_str(&whatsapp_api_key.as_str()).unwrap(),
+        );
+
+        match client
+            .post(format!("{}/api/send", host))
+            .headers(headers)
+            .query(&[("number", phone_number), ("message", message)])
+            .send()
+            .await
+        {
+            Ok(res) => res,
+            Err(_) => {
+                return Err(Errors::new(&[("whatsapp_send_message", "Failed to send message")]));
+            }
+        };
+
+        return Ok(());
+
+    }
+
+    Err(Errors::new(&[("whatsapp_send_message", "Datetime is not yet reached")]))
+
+}
+
+async fn set_job_schedule_to_queue(pool: PgPool) {
+    // let mut conn = pool.acquire().await.unwrap();
+
+    let job_schedules = match JobSchedule::get_scheduled_jobs(&pool).await {
+        Ok(job_schedules) => job_schedules,
+        Err(_) => {
+            return;
+        }
+    };
+
+    for job_schedule in job_schedules {
+        let job_schedule_id = job_schedule.id;
+
+        match JobSchedule::update_status(&pool, job_schedule_id, "pending").await {
+            Ok(_) => (),
+            Err(_) => {
+                return;
+            }
+        };
+
+        let priority = match job_schedule.job_type.as_str() {
+            "send_invoice" => 0,
+            "send_reminder" => 1,
+            _ => 10,
+        };
+
+        match JobQueue::create(
+            &pool,
+            &job_schedule.job_type,
+            job_schedule.job_data,
+            Some(job_schedule_id),
+            priority,
+            "pending",
+        )
+        .await
+        {
+            Ok(_) => (),
+            Err(_) => {
+                return;
+            }
+        }
+    }
 }

@@ -1,6 +1,7 @@
+pub type PoolPostgres = sqlx::pool::PoolConnection<sqlx::Postgres>;
 
 pub mod default_date_format {
-    use chrono::{DateTime, NaiveDateTime};
+    use chrono::{NaiveDateTime};
     use serde::{self, Deserialize, Serializer, Deserializer};
 
     const FORMAT: &'static str = "%Y-%m-%d %H:%M:%S";

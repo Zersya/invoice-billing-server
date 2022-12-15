@@ -11,7 +11,7 @@ pub async fn hello_world() -> Html<&'static str> {
 
 pub async fn get_users(State(db): State<PgPool>,) -> impl IntoResponse {
     
-    let users = User::get_all(db).await.unwrap();
+    let users = User::get_all(&db).await.unwrap();
 
     Json(users)
 }

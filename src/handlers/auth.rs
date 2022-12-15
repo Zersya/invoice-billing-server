@@ -11,7 +11,7 @@ use axum::response::{IntoResponse, Response};
 use axum::{extract::State, response::Json};
 use crypto_hash::{hex_digest, Algorithm};
 use reqwest::StatusCode;
-use serde_json::{json, Value};
+use serde_json::json;
 use sqlx::PgPool;
 
 pub async fn register(State(db): State<PgPool>, Json(payload): Json<RequestRegister>) -> Response {
@@ -20,7 +20,10 @@ pub async fn register(State(db): State<PgPool>, Json(payload): Json<RequestRegis
     let name = extractor.extract("name", Some(payload.name));
     let email = extractor.extract("email", Some(payload.email));
     let password = extractor.extract("password", Some(payload.password));
-    extractor.check();
+    match extractor.check() {
+        Ok(_) => (),
+        Err(err) => return (StatusCode::UNPROCESSABLE_ENTITY, err.into_response()).into_response(),
+    }
 
     match User::get_by_email(&db, &email).await {
         Ok(err) => {

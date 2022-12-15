@@ -14,6 +14,7 @@ pub struct DatabaseConfig {
     pub host: String,
     pub port: u32,
     pub dbname: String,
+    pub poolminsize: u32,
     pub poolmaxsize: u32,
 }
 

@@ -1,0 +1,95 @@
+use chrono::NaiveDateTime;
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+
+use crate::utils::PoolPostgres;
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct JobSchedule {
+    pub id: i32,
+    pub job_type: String,
+    pub job_data: Option<Value>,
+    pub run_at: NaiveDateTime,
+    pub repeat_interval: Option<i32>,
+    pub repeat_count: Option<i32>,
+    pub dependencies: Option<String>,
+    pub status: String,
+    pub retry_count: Option<i32>,
+    pub retry_interval: Option<i32>,
+    pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
+    pub deleted_at: Option<NaiveDateTime>,
+}
+
+impl JobSchedule {
+    pub async fn create(
+        db: &sqlx::PgPool,
+        job_type: &str,
+        job_data: Option<Value>,
+        run_at: &NaiveDateTime,
+        repeat_interval: Option<i32>,
+        repeat_count: Option<i32>,
+        dependencies: Option<String>,
+        status: &str,
+        retry_count: Option<i32>,
+        retry_interval: Option<i32>,
+    ) -> Result<JobSchedule, sqlx::Error> {
+        let job_schedule = sqlx::query_as!(
+            JobSchedule,
+            r#"
+            INSERT INTO job_schedules (job_type, job_data, run_at, repeat_interval, repeat_count, dependencies, status, retry_count, retry_interval)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            RETURNING *
+            "#,
+            job_type,
+            job_data,
+            run_at,
+            repeat_interval,
+            repeat_count,
+            dependencies,
+            status,
+            retry_count,
+            retry_interval
+        )
+        .fetch_one(db)
+        .await?;
+
+        Ok(job_schedule)
+    }
+
+    pub async fn get_scheduled_jobs(db: &sqlx::PgPool) -> Result<Vec<JobSchedule>, sqlx::Error> {
+        let job_schedules = sqlx::query_as!(
+            JobSchedule,
+            r#"
+            SELECT * FROM job_schedules
+            WHERE status = 'scheduled'
+            "#
+        )
+        .fetch_all(db)
+        .await?;
+
+        Ok(job_schedules)
+    }
+
+    pub async fn update_status(
+        db: &sqlx::PgPool,
+        id: i32,
+        status: &str,
+    ) -> Result<JobSchedule, sqlx::Error> {
+        let job_schedule = sqlx::query_as!(
+            JobSchedule,
+            r#"
+            UPDATE job_schedules
+            SET status = $1
+            WHERE id = $2
+            RETURNING *
+            "#,
+            status,
+            id
+        )
+        .fetch_one(db)
+        .await?;
+
+        Ok(job_schedule)
+    }
+}

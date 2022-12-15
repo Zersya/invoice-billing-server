@@ -57,9 +57,9 @@ impl User {
         Ok(user)
     }
 
-    pub async fn get_all(db: sqlx::PgPool) -> Result<Vec<User>, sqlx::Error> {
+    pub async fn get_all(db: &sqlx::PgPool) -> Result<Vec<User>, sqlx::Error> {
         let users = sqlx::query_as!(User, r"SELECT * FROM users")
-            .fetch_all(&db)
+            .fetch_all(db)
             .await?;
 
         Ok(users)

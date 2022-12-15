@@ -12,7 +12,7 @@ reqwest = { version = "0.11", features = ["json"] }
 tokio = { version = "1.21.2", features = ["full"] }
 chrono = { version = "0.4.20", features = ["serde"] }
 uuid = { version = "1.1.2", features = ["serde", "v4"] }
-sqlx = { version = "0.6", features = [ "runtime-tokio-native-tls" , "postgres", "uuid", "chrono" ] }
+sqlx = { version = "0.6", features = [ "runtime-tokio-native-tls" , "postgres", "uuid", "chrono", "json" ] }
 serde = { version = "1.0.137", features = ["derive"] }
 serde_json = "1.0.75"
 rust-argon2 = "1.0.0"
@@ -25,6 +25,7 @@ dotenvy = "0.15.5"
 calamine = "0.19.1"
 tracing = "0.1"
 tracing-subscriber = "0.3"
+tower = "0.4.13"
 tower-layer = "0.3.2"
 cron = "0.12.0"
 

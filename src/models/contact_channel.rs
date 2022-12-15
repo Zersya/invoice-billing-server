@@ -11,6 +11,12 @@ pub struct ContactChannel {
     pub deleted_at: Option<NaiveDateTime>,
 }
 
+#[derive(Serialize, Deserialize, Debug, sqlx::Type)]
+pub struct SimpleContactChannel {
+    pub id: Uuid,
+    pub name: String,
+}
+
 impl ContactChannel {
     pub async fn get_all (
         db: &sqlx::PgPool,

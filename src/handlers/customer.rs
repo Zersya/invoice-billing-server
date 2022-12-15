@@ -83,11 +83,23 @@ pub async fn create(
             }
         };
 
+    // remove + in +62 from phone number
+    let phone_number = body.contact_channel_value.replace("+", "");
+
+    // replace first 0 with 62 if phone number start with 0
+    let phone_number:String = if phone_number.starts_with("0") {
+        let mut phone = phone_number.clone();
+        phone.replace_range(0..1, "62");
+        phone
+    } else {
+        phone_number
+    };
+
     match CustomerContactChannel::create_using_transaction(
         &mut db_transaction,
         &customer.id,
         &body.contact_channel_id,
-        &body.contact_channel_value,
+        &phone_number,
     )
     .await
     {

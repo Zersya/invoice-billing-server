@@ -105,4 +105,23 @@ impl Invoice {
 
         Ok(invoices)
     }
+
+    pub async fn get_by_id (
+        db: &sqlx::PgPool,
+        id: &Uuid,
+    ) -> Result<Invoice, sqlx::Error> {
+        let invoice = sqlx::query_as!(
+            Invoice,
+            r#"
+            SELECT *
+            FROM invoices
+            WHERE id = $1
+            "#,
+            id
+        )
+        .fetch_one(db)
+        .await?;
+
+        Ok(invoice)
+    }
 }
