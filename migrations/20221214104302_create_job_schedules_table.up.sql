@@ -7,9 +7,9 @@ CREATE TABLE job_schedules (
     -- data for the job (JSON or binary)
     run_at TIMESTAMP NOT NULL,
     -- time when the job should be run
-    repeat_interval INTEGER,
+    repeat_interval BIGINT,
     -- interval at which the job should be repeated (in seconds)
-    repeat_count INTEGER,
+    repeat_count INTEGER DEFAULT 1,
     -- number of times the job should be repeated (NULL for unlimited)
     dependencies TEXT,
     -- IDs of other jobs that must be completed first

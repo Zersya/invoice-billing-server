@@ -80,4 +80,22 @@ impl JobQueue {
 
         Ok(job_queue)
     }
+
+    pub async fn get_queue_not_completed_by_schedule_id(
+        db: &sqlx::PgPool,
+        job_schedule_id: i32,
+    ) -> Result<Vec<JobQueue>, sqlx::Error> {
+        let job_queues = sqlx::query_as!(
+            JobQueue,
+            r#"
+            SELECT * FROM job_queues
+            WHERE job_schedule_id = $1 AND status != 'completed'
+            "#,
+            job_schedule_id
+        )
+        .fetch_all(db)
+        .await?;
+
+        Ok(job_queues)
+    }
 }

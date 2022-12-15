@@ -2,15 +2,13 @@ use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::utils::PoolPostgres;
-
 #[derive(Serialize, Deserialize, Debug)]
 pub struct JobSchedule {
     pub id: i32,
     pub job_type: String,
     pub job_data: Option<Value>,
     pub run_at: NaiveDateTime,
-    pub repeat_interval: Option<i32>,
+    pub repeat_interval: Option<i64>,
     pub repeat_count: Option<i32>,
     pub dependencies: Option<String>,
     pub status: String,
@@ -27,7 +25,7 @@ impl JobSchedule {
         job_type: &str,
         job_data: Option<Value>,
         run_at: &NaiveDateTime,
-        repeat_interval: Option<i32>,
+        repeat_interval: Option<i64>,
         repeat_count: Option<i32>,
         dependencies: Option<String>,
         status: &str,
@@ -57,12 +55,27 @@ impl JobSchedule {
         Ok(job_schedule)
     }
 
+    pub async fn get_schedule_by_id(db: &sqlx::PgPool, id: i32) -> Result<JobSchedule, sqlx::Error> {
+        let job_schedule = sqlx::query_as!(
+            JobSchedule,
+            r#"
+            SELECT * FROM job_schedules
+            WHERE id = $1
+            "#,
+            id
+        )
+        .fetch_one(db)
+        .await?;
+
+        Ok(job_schedule)
+    }
+
     pub async fn get_scheduled_jobs(db: &sqlx::PgPool) -> Result<Vec<JobSchedule>, sqlx::Error> {
         let job_schedules = sqlx::query_as!(
             JobSchedule,
             r#"
             SELECT * FROM job_schedules
-            WHERE status = 'scheduled'
+            WHERE (status = 'scheduled' OR status = 'pending' OR status = 'in_progress') AND run_at <= now()
             "#
         )
         .fetch_all(db)
@@ -85,6 +98,50 @@ impl JobSchedule {
             RETURNING *
             "#,
             status,
+            id
+        )
+        .fetch_one(db)
+        .await?;
+
+        Ok(job_schedule)
+    }
+
+    pub async fn update_repeat_count(
+        db: &sqlx::PgPool,
+        id: i32,
+        repeat_count: i32,
+    ) -> Result<JobSchedule, sqlx::Error> {
+        let job_schedule = sqlx::query_as!(
+            JobSchedule,
+            r#"
+            UPDATE job_schedules
+            SET repeat_count = $1
+            WHERE id = $2
+            RETURNING *
+            "#,
+            repeat_count,
+            id
+        )
+        .fetch_one(db)
+        .await?;
+
+        Ok(job_schedule)
+    }
+
+    pub async fn update_run_at(
+        db: &sqlx::PgPool,
+        id: i32,
+        run_at: &NaiveDateTime,
+    ) -> Result<JobSchedule, sqlx::Error> {
+        let job_schedule = sqlx::query_as!(
+            JobSchedule,
+            r#"
+            UPDATE job_schedules
+            SET run_at = $1
+            WHERE id = $2
+            RETURNING *
+            "#,
+            run_at,
             id
         )
         .fetch_one(db)

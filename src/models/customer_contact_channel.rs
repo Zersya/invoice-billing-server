@@ -2,8 +2,6 @@ use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use super::contact_channel::{ContactChannel, SimpleContactChannel};
-
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CustomerContactChannel {
     pub id: Uuid,

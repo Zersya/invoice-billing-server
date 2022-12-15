@@ -1,15 +1,12 @@
-pub type PoolPostgres = sqlx::pool::PoolConnection<sqlx::Postgres>;
+// pub type PoolPostgres = sqlx::pool::PoolConnection<sqlx::Postgres>;
 
 pub mod default_date_format {
-    use chrono::{NaiveDateTime};
-    use serde::{self, Deserialize, Serializer, Deserializer};
+    use chrono::{Local, NaiveDateTime};
+    use serde::{self, Deserialize, Deserializer, Serializer};
 
     const FORMAT: &'static str = "%Y-%m-%d %H:%M:%S";
 
-    pub fn serialize<S>(
-        date: &NaiveDateTime,
-        serializer: S,
-    ) -> Result<S::Ok, S::Error>
+    pub fn serialize<S>(date: &NaiveDateTime, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
@@ -17,9 +14,7 @@ pub mod default_date_format {
         serializer.serialize_str(&s)
     }
 
-    pub fn deserialize<'de, D>(
-        deserializer: D,
-    ) -> Result<NaiveDateTime, D::Error>
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<NaiveDateTime, D::Error>
     where
         D: Deserializer<'de>,
     {
@@ -29,6 +24,8 @@ pub mod default_date_format {
             Err(err) => return Err(serde::de::Error::custom(err)),
         };
 
-        Ok(dt)
+        let dt = dt.and_local_timezone(Local).unwrap();
+
+        Ok(dt.naive_utc())
     }
 }

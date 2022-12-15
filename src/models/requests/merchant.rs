@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use validator_derive::Validate;
 
-#[derive(Deserialize, Validate)]
+#[derive(Deserialize, Validate, Debug)]
 pub struct RequestCreateMerchant {
     #[validate(length(min = 4, max = 24))]
     pub name: String,
@@ -9,7 +9,7 @@ pub struct RequestCreateMerchant {
     pub description: String,
 }
 
-#[derive(Deserialize, Validate)]
+#[derive(Deserialize, Validate, Debug)]
 pub struct RequestUpdateMerchant {
     #[validate(length(min = 4, max = 24))]
     pub name: String,

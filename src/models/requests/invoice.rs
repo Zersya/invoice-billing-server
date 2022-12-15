@@ -1,10 +1,10 @@
-use chrono::{NaiveDateTime, DateTime, Utc};
+use chrono::{NaiveDateTime};
 use serde::Deserialize;
 use uuid::Uuid;
 use validator_derive::Validate;
 use crate::utils::default_date_format;
 
-#[derive(Deserialize, Validate)]
+#[derive(Deserialize, Validate, Debug)]
 pub struct RequestCreateInvoice {
     pub customer_id: Uuid,
     #[validate(range(min = 0, max = 999999999))]

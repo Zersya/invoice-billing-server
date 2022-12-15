@@ -1,12 +1,14 @@
 use crate::models::invoice::Invoice;
 use crate::models::job_schedule::JobSchedule;
 use crate::models::requests::invoice::RequestCreateInvoice;
+use crate::models::requests::invoice_schedule::RequestInvoiceSchedule;
 use crate::models::responses::DefaultResponse;
 use axum::extract::Path;
 use axum::response::{IntoResponse, Response};
 use axum::Extension;
 use axum::{extract::State, response::Json};
 use reqwest::StatusCode;
+use rust_decimal::prelude::ToPrimitive;
 use serde_json::json;
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -73,7 +75,62 @@ pub async fn set_invoice_scheduler(
     State(db): State<PgPool>,
     Extension(user_id): Extension<Uuid>,
     Path((_, invoice_id)): Path<(Uuid, Uuid)>,
+    Json(body): Json<RequestInvoiceSchedule>,
 ) -> Response {
+    match validator::Validate::validate(&body) {
+        Ok(_) => (),
+        Err(err) => {
+            let body =
+                DefaultResponse::error(err.to_string().as_str(), err.to_string())
+                    .into_json();
+            return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+        }
+    }
+
+    if body.end_at < body.start_at {
+        let body = DefaultResponse::error(
+            "end_at must be greater than start_at",
+            invoice_id.to_string(),
+        )
+        .into_json();
+
+        return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+    }
+
+    if body.start_at < chrono::Utc::now().naive_utc() {
+        let body = DefaultResponse::error(
+            "start_at must be greater than current time",
+            invoice_id.to_string(),
+        )
+        .into_json();
+
+        return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+    }
+
+    if body.end_at - body.start_at < chrono::Duration::days(5) {
+        let body =
+            DefaultResponse::error("duration must be more than 5 days", invoice_id.to_string())
+                .into_json();
+
+        return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+    }
+
+    let repeat_interval_type = body.repeat_interval_type.unwrap().clone();
+
+    let repeat_interval = if repeat_interval_type == "WEEKLY" {
+        let duration = chrono::Duration::weeks(1).num_seconds();
+        duration
+    } else if repeat_interval_type == "MONTHLY" {
+        let duration = chrono::Duration::weeks(4).num_seconds();
+        duration
+    } else {
+        let duration = chrono::Duration::weeks(1).num_seconds();
+        duration
+    };
+
+    // repeat count based on start and end date and repeat interval
+    let repeat_count = (body.end_at - body.start_at).num_seconds() / repeat_interval;
+
     let invoice = match Invoice::get_by_id(&db, &invoice_id).await {
         Ok(invoice) => invoice,
         Err(err) => {
@@ -97,9 +154,9 @@ pub async fn set_invoice_scheduler(
             "invoice_date": invoice.invoice_date,
             "created_by": user_id,
         })),
-        &invoice.invoice_date,
-        None,
-        None,
+        &body.start_at,
+        Some(repeat_interval),
+        repeat_count.to_i32(),
         None,
         "scheduled",
         None,
