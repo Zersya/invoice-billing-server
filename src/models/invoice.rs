@@ -1,10 +1,12 @@
-use chrono::{NaiveDateTime};
+use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use uuid::Uuid;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Invoice {
     pub id: Uuid,
+    pub invoice_number: String,
     pub merchant_id: Uuid,
     pub customer_id: Uuid,
     pub amount: i32,
@@ -16,11 +18,13 @@ pub struct Invoice {
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
     pub deleted_at: Option<NaiveDateTime>,
+    pub xendit_invoice_payload: Option<Value>,
 }
 
 impl Invoice {
     pub async fn create(
         db: &sqlx::PgPool,
+        invoice_number: &str,
         customer_id: &Uuid,
         merchant_id: &Uuid,
         amount: &i32,
@@ -33,10 +37,11 @@ impl Invoice {
         let invoice = sqlx::query_as!(
             Invoice,
             r#"
-            INSERT INTO invoices (customer_id, merchant_id, amount, total_amount, tax_amount, tax_rate, invoice_date, created_by)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            INSERT INTO invoices (invoice_number, customer_id, merchant_id, amount, total_amount, tax_amount, tax_rate, invoice_date, created_by)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
             RETURNING *
             "#,
+            invoice_number,
             customer_id,
             merchant_id,
             amount,
@@ -45,6 +50,28 @@ impl Invoice {
             tax_rate,
             invoice_date,
             created_by
+        )
+        .fetch_one(db)
+        .await?;
+
+        Ok(invoice)
+    }
+
+    pub async fn update_xendit_invoice_payload(
+        db: &sqlx::PgPool,
+        invoice_id: &Uuid,
+        xendit_invoice_payload: &Value,
+    ) -> Result<Invoice, sqlx::Error> {
+        let invoice = sqlx::query_as!(
+            Invoice,
+            r#"
+            UPDATE invoices
+            SET xendit_invoice_payload = $1
+            WHERE id = $2
+            RETURNING *
+            "#,
+            xendit_invoice_payload,
+            invoice_id
         )
         .fetch_one(db)
         .await?;
@@ -106,10 +133,7 @@ impl Invoice {
         Ok(invoices)
     }
 
-    pub async fn get_by_id (
-        db: &sqlx::PgPool,
-        id: &Uuid,
-    ) -> Result<Invoice, sqlx::Error> {
+    pub async fn get_by_id(db: &sqlx::PgPool, id: &Uuid) -> Result<Invoice, sqlx::Error> {
         let invoice = sqlx::query_as!(
             Invoice,
             r#"
@@ -123,5 +147,12 @@ impl Invoice {
         .await?;
 
         Ok(invoice)
+    }
+
+    pub fn to_string(&self) -> String {
+        format!(
+            "customer_id: {}, total_amount: {}, invoice_date: {}",
+            self.customer_id, self.total_amount, self.invoice_date
+        )
     }
 }

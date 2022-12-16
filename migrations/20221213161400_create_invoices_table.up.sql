@@ -1,5 +1,6 @@
 CREATE TABLE invoices (
     id uuid DEFAULT uuid_generate_v4(),
+    invoice_number VARCHAR(255) NOT NULL,
     merchant_id uuid NOT NULL,
     customer_id uuid NOT NULL,
     amount INTEGER NOT NULL,
@@ -11,6 +12,7 @@ CREATE TABLE invoices (
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
     deleted_at TIMESTAMP,
+    XENDIT_INVOICE_PAYLOAD JSONB,
     PRIMARY KEY (id),
     FOREIGN KEY (merchant_id) REFERENCES merchants(id) ON DELETE CASCADE,
     FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,

@@ -1,6 +1,7 @@
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use uuid::Uuid;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct JobSchedule {
@@ -148,5 +149,24 @@ impl JobSchedule {
         .await?;
 
         Ok(job_schedule)
+    }
+
+    pub async fn get_by_job_data_json_by_invoice_id(
+        db: &sqlx::PgPool,
+        invoice_id: &str,
+    ) -> Result<JobSchedule, sqlx::Error> {
+        let job_schedules = sqlx::query_as!(
+            JobSchedule,
+            r#"
+            SELECT * FROM job_schedules
+            WHERE job_data->>'invoice_id' = $1
+            LIMIT 1
+            "#,
+            invoice_id
+        )
+        .fetch_one(db)
+        .await?;
+
+        Ok(job_schedules)
     }
 }

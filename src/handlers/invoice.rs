@@ -3,6 +3,7 @@ use crate::models::job_schedule::JobSchedule;
 use crate::models::requests::invoice::RequestCreateInvoice;
 use crate::models::requests::invoice_schedule::RequestInvoiceSchedule;
 use crate::models::responses::DefaultResponse;
+use crate::repositories::invoice::send_invoice_to_xendit;
 use axum::extract::Path;
 use axum::response::{IntoResponse, Response};
 use axum::Extension;
@@ -43,8 +44,33 @@ pub async fn create(
     let tax_amount = body.amount * tax_rate / 100;
     let total_amount = body.amount + tax_amount;
 
+    let now = chrono::Utc::now().naive_utc();
+
+    let invoice_number =
+        "INVC-".to_owned() + now.timestamp().to_string().as_str() + "-" + &user_id.to_string();
+
+    let result = match send_invoice_to_xendit(
+        &invoice_number,
+        &total_amount,
+        &body.to_string_custom_amount(total_amount),
+    )
+    .await
+    {
+        Ok(payload) => payload,
+        Err(_) => {
+            let body = DefaultResponse::error(
+                "Failed to send invoice",
+                "send invoice to xendit failed".to_string(),
+            )
+            .into_json();
+
+            return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+        }
+    };
+
     let invoice = match Invoice::create(
         &db,
+        &invoice_number,
         &body.customer_id,
         &merchant_id,
         &body.amount,
@@ -59,6 +85,15 @@ pub async fn create(
         Ok(invoice) => invoice,
         Err(err) => {
             let body = DefaultResponse::error("create invoice failed", err.to_string()).into_json();
+
+            return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+        }
+    };
+
+    let invoice = match Invoice::update_xendit_invoice_payload(&db, &invoice.id, &result).await {
+        Ok(invoice) => invoice,
+        Err(err) => {
+            let body = DefaultResponse::error("update invoice failed", err.to_string()).into_json();
 
             return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
         }
@@ -81,8 +116,7 @@ pub async fn set_invoice_scheduler(
         Ok(_) => (),
         Err(err) => {
             let body =
-                DefaultResponse::error(err.to_string().as_str(), err.to_string())
-                    .into_json();
+                DefaultResponse::error(err.to_string().as_str(), err.to_string()).into_json();
             return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
         }
     }

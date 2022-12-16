@@ -12,3 +12,12 @@ pub struct RequestCreateInvoice {
     #[serde(with = "default_date_format")]
     pub invoice_date: NaiveDateTime,
 }
+
+impl RequestCreateInvoice {
+    pub fn to_string_custom_amount(&self, amount: i32) -> String {
+        format!(
+            "customer_id: {}, total_amount: {}, invoice_date: {}",
+            self.customer_id, amount, self.invoice_date
+        )
+    }
+}

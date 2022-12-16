@@ -1,10 +1,20 @@
+use std::ops::Add;
+
 use axum::http::HeaderValue;
-use chrono::Utc;
+use chrono::{Duration, Utc};
 use cron::Schedule;
+use serde_json::Value;
 use sqlx::PgPool;
+use uuid::Uuid;
 
-use crate::{errors::Errors, models::{job_schedule::JobSchedule, job_queue::JobQueue}};
-
+use crate::{
+    errors::Errors,
+    models::{
+        customer_contact_channel::CustomerContactChannel, invoice::Invoice, job_queue::JobQueue,
+        job_schedule::JobSchedule,
+    },
+    repositories::invoice::send_invoice_to_xendit,
+};
 
 pub async fn whatsapp_send_message(
     phone_number: &str,
@@ -38,20 +48,23 @@ pub async fn whatsapp_send_message(
         {
             Ok(res) => res,
             Err(_) => {
-                return Err(Errors::new(&[("whatsapp_send_message", "Failed to send message")]));
+                return Err(Errors::new(&[(
+                    "whatsapp_send_message",
+                    "Failed to send message",
+                )]));
             }
         };
 
         return Ok(());
-
     }
 
-    Err(Errors::new(&[("whatsapp_send_message", "Datetime is not yet reached")]))
-
+    Err(Errors::new(&[(
+        "whatsapp_send_message",
+        "Datetime is not yet reached",
+    )]))
 }
 
 pub async fn set_job_schedule_to_queue(pool: PgPool) {
-
     let job_schedules = match JobSchedule::get_scheduled_jobs(&pool).await {
         Ok(job_schedules) => job_schedules,
         Err(_) => {
@@ -75,17 +88,47 @@ pub async fn set_job_schedule_to_queue(pool: PgPool) {
             _ => 10,
         };
 
-        let is_queue_empty = match JobQueue::get_queue_not_completed_by_schedule_id(&pool, job_schedule_id).await {
-            Ok(job_queues) => {
-                job_queues.len() == 0
-            }
-            Err(_) => {
-                false
-            }
-        };
+        let is_queue_empty =
+            match JobQueue::get_queue_not_completed_by_schedule_id(&pool, job_schedule_id).await {
+                Ok(job_queues) => job_queues.len() == 0,
+                Err(_) => false,
+            };
 
         if !is_queue_empty {
             continue;
+        }
+
+        if job_schedule.job_type == "send_invoice" {
+            let job_data = job_schedule.job_data.clone().unwrap();
+            let invoice_id = job_data["invoice_id"].as_str().unwrap();
+            let invoice_id = Uuid::parse_str(invoice_id).unwrap();
+
+            let invoice = match Invoice::get_by_id(&pool, &invoice_id).await {
+                Ok(invoice) => invoice,
+                Err(_) => {
+                    return;
+                }
+            };
+
+            let result = match send_invoice_to_xendit(
+                &invoice.invoice_number,
+                &invoice.total_amount,
+                &invoice.to_string(),
+            )
+            .await
+            {
+                Ok(payload) => payload,
+                Err(_) => {
+                    return;
+                }
+            };
+
+            match Invoice::update_xendit_invoice_payload(&pool, &invoice.id, &result).await {
+                Ok(invoice) => invoice,
+                Err(_) => {
+                    return;
+                }
+            };
         }
 
         match JobQueue::create(
@@ -102,6 +145,141 @@ pub async fn set_job_schedule_to_queue(pool: PgPool) {
             Err(_) => {
                 return;
             }
+        }
+    }
+}
+
+pub async fn prepare_invoice_via_channels(
+    pool: &PgPool,
+    job_data: Value,
+    schedule: &Schedule,
+) -> Result<(), Errors> {
+    let invoice_id = match job_data["invoice_id"].as_str() {
+        Some(invoice_id) => uuid::Uuid::parse_str(invoice_id).unwrap(),
+        None => {
+            return Err(Errors::new(&[(
+                "prepare_invoice",
+                "Failed to prepare invoice",
+            )]));
+        }
+    };
+
+    let customer_id = match job_data["customer_id"].as_str() {
+        Some(phone_number) => uuid::Uuid::parse_str(phone_number).unwrap(),
+        None => {
+            return Err(Errors::new(&[(
+                "prepare_invoice",
+                "Failed to prepare invoice",
+            )]));
+        }
+    };
+
+    let merchant_id = match job_data["merchant_id"].as_str() {
+        Some(merchant_id) => uuid::Uuid::parse_str(merchant_id).unwrap(),
+        None => {
+            return Err(Errors::new(&[(
+                "prepare_invoice",
+                "Failed to prepare invoice",
+            )]));
+        }
+    };
+
+    let total_amount = match job_data["total_amount"].as_i64() {
+        Some(total_amount) => total_amount.to_string(),
+        None => {
+            return Err(Errors::new(&[(
+                "prepare_invoice",
+                "Failed to prepare invoice",
+            )]));
+        }
+    };
+
+    let customer_contact_channels =
+        match CustomerContactChannel::get_customer_contact_channels_by_customer_and_merchant(
+            &pool,
+            &customer_id,
+            &merchant_id,
+        )
+        .await
+        {
+            Ok(customer_contact_channels) => customer_contact_channels,
+            Err(_) => {
+                return Err(Errors::new(&[(
+                    "prepare_invoice",
+                    "Failed to prepare invoice",
+                )]));
+            }
+        };
+
+    // This code finds the whatsapp contact channel, if it exists.
+    let whatsapp_contact_channel = match customer_contact_channels
+        .iter()
+        .find(|contact_channel| contact_channel.name == "whatsapp")
+    {
+        Some(whatsapp_contact_channel) => whatsapp_contact_channel,
+        None => {
+            return Err(Errors::new(&[(
+                "prepare_invoice",
+                "Failed to prepare invoice",
+            )]));
+        }
+    };
+
+    let invoice = match Invoice::get_by_id(&pool, &invoice_id).await {
+        Ok(invoice) => invoice,
+        Err(_) => {
+            return Err(Errors::new(&[(
+                "prepare_invoice",
+                "Failed to prepare invoice",
+            )]));
+        }
+    };
+
+    let xendit_invoice_payload = invoice.xendit_invoice_payload.unwrap();
+    let invoice_url = xendit_invoice_payload["invoice_url"].as_str().unwrap();
+
+    let job_schedule =
+        match JobSchedule::get_by_job_data_json_by_invoice_id(&pool, &invoice.id.to_string().as_str()).await {
+            Ok(job_schedule) => job_schedule,
+            Err(_) => {
+                return Err(Errors::new(&[(
+                    "prepare_invoice",
+                    "Failed to prepare invoice",
+                )]));
+            }
+        };
+
+    let repeat_interval = if job_schedule.repeat_interval.is_some() {
+        job_schedule.repeat_interval.unwrap()
+    } else {
+        2
+    };
+
+    let now = Utc::now();
+    let due_time = &now.add(Duration::seconds(repeat_interval));
+    let days = now.signed_duration_since(*due_time).num_days();
+    let due_time = format!("{}", due_time.format("%d/%m/%Y - %H:%M"));
+
+    match whatsapp_send_message(
+        whatsapp_contact_channel.value.as_str(),
+        format!(
+            "Please make a payment of *{}* within *{} days* to avoid incurring late fees. The *payment link* is {} and the *due date* is {}.",
+            total_amount,
+            days,
+            invoice_url,
+            due_time
+        )
+        .as_str(),
+        &schedule,
+    )
+    .await
+    {
+        Ok(_) => Ok(()),
+        Err(_) => {
+            return Err(Errors::new(&[(
+                "prepare_invoice",
+                "Failed to prepare invoice",
+            )]));
         }
     }
 }

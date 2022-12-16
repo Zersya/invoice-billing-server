@@ -23,6 +23,7 @@ mod middlewares;
 mod models;
 mod utils;
 mod jobs;
+mod repositories;
 
 pub async fn axum() {
     tracing_subscriber::registry()
