@@ -54,4 +54,4 @@ jobs:
           docker image ls -a
 
       - name: Build the Docker image
-        run: docker-compose -p kassku-staging_server up -d
+        run: docker-compose -p inving-staging_server up -d
