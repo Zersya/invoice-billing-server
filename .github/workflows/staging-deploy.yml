@@ -24,13 +24,13 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
-          tags: zeinersyad/${{env.APP_NAME}}:staging
-          outputs: type=docker,dest=/tmp/${{env.APP_NAME}}.tar
+          tags: zeinersyad/inving_server:staging
+          outputs: type=docker,dest=/tmp/inving_server.tar
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
-          name: ${{env.APP_NAME}}
-          path: /tmp/${{env.APP_NAME}}.tar
+          name: inving_server
+          path: /tmp/inving_server.tar
 
   deploy:
     runs-on: self-hosted
@@ -46,11 +46,11 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v3
         with:
-          name: ${{env.APP_NAME}}
+          name: inving_server
           path: /tmp
       - name: Load Docker image
         run: |
-          docker load --input /tmp/${{env.APP_NAME}}.tar
+          docker load --input /tmp/inving_server.tar
           docker image ls -a
 
       - name: Build the Docker image
