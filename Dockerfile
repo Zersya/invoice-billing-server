@@ -23,4 +23,4 @@ USER inving
 
 CMD ["/usr/local/bin/invoice-billing-server"]
 
-EXPOSE 9001
+EXPOSE 9000

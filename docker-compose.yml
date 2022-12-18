@@ -7,7 +7,7 @@ services:
         restart: unless-stopped
         working_dir: /var/www
         ports:
-            - 9001:9001
+            - 9000:9000
         tty: true
         environment:
             SERVICE_NAME: "${APP_NAME}"
