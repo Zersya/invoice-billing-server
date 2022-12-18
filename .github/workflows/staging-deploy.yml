@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     environment: staging
     steps:
       - name: Checkout
@@ -24,7 +24,7 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
-          tags: zeinersyad/inving_server:staging
+          tags: inving_server:staging
           outputs: type=docker,dest=/tmp/inving_server.tar
       - name: Upload artifact
         uses: actions/upload-artifact@v3
@@ -54,4 +54,4 @@ jobs:
           docker image ls -a
 
       - name: Build the Docker image
-        run: docker-compose -p inving-staging_server up -d
+        run: docker-compose -p kassku-staging_server up -d
