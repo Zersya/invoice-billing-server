@@ -23,4 +23,5 @@ services:
             PG_HOST: "${PG_HOST}"
             PG_PORT: "${PG_PORT}"
             PG_DBNAME: "${PG_DBNAME}"
+            PG_POOLMINSIZE: "${PG_POOLMINSIZE}"
             PG_POOLMAXSIZE: "${PG_POOLMAXSIZE}"
