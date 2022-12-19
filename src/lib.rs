@@ -85,7 +85,7 @@ pub async fn axum() {
         .route_layer(merchant_middleware)
         .route(
             "/merchant",
-            get(handlers::merchant::get_by_authenticated_user), // .post(handlers::merchant::create),
+            get(handlers::merchant::get_by_authenticated_user).post(handlers::merchant::create),
         )
         .route(
             "/contact-channels",
