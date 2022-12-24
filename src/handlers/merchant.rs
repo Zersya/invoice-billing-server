@@ -36,6 +36,21 @@ pub async fn create(
     Extension(user_id): Extension<Uuid>,
     Json(body): Json<RequestCreateMerchant>,
 ) -> Response {
+    if body.name.is_empty() {
+        let body = DefaultResponse::error("name is required", "name is empty".to_string())
+            .into_json();
+
+        return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+    }
+
+    if body.description.is_empty() {
+        let body = DefaultResponse::error("description is required", "description is empty".to_string())
+            .into_json();
+
+        return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+    }
+
+
     let merchant = match Merchant::create(&db, &body.name, &body.description, &user_id).await {
         Ok(merchant) => merchant,
         Err(err) => {

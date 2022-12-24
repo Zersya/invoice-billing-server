@@ -21,6 +21,7 @@ pub struct CustomerWithContactChannels {
     pub updated_at: NaiveDateTime,
     pub deleted_at: Option<NaiveDateTime>,
     pub contact_channel_id: Uuid,
+    pub contact_channel_value: String,
     pub contact_channel_name: String,
 }
 
@@ -119,7 +120,10 @@ impl Customer {
             CustomerWithContactChannels,
             r#"
             SELECT
-                customers.*, customer_contact_channels.contact_channel_id as contact_channel_id, contact_channels.name as contact_channel_name
+                customers.*, 
+                customer_contact_channels.contact_channel_id as contact_channel_id, 
+                customer_contact_channels.value as contact_channel_value, 
+                contact_channels.name as contact_channel_name
             FROM
                 customers
                 INNER JOIN customer_contact_channels ON customer_contact_channels.customer_id = customers.id
