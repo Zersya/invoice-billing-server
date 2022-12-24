@@ -2,15 +2,16 @@ extern crate cron;
 
 use cron::Schedule;
 use std::net::SocketAddr;
-use std::{str::FromStr};
+use std::str::FromStr;
 
 use axum::{
     routing::{get, post, put},
-    Router,
+    Router, http::HeaderValue, http::Method
 };
 
 use dotenvy::dotenv;
 use sqlx::postgres::PgPoolOptions;
+use tower_http::cors::CorsLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use crate::jobs::spawns::{spawn_job_queue, spawn_set_job_schedule_to_queue};
@@ -18,12 +19,12 @@ use crate::jobs::spawns::{spawn_job_queue, spawn_set_job_schedule_to_queue};
 mod config;
 mod errors;
 mod handlers;
+mod jobs;
 mod logger;
 mod middlewares;
 mod models;
-mod utils;
-mod jobs;
 mod repositories;
+mod utils;
 
 pub async fn axum() {
     tracing_subscriber::registry()
@@ -94,7 +95,14 @@ pub async fn axum() {
         .route_layer(auth_middleware)
         .route("/login", post(handlers::auth::login))
         .route("/register", post(handlers::auth::register))
-        .route("/", get(handlers::user::hello_world));
+        .route("/", get(handlers::user::hello_world))
+        .layer(
+            CorsLayer::new()
+                .allow_origin("http://localhost:5173".parse::<HeaderValue>().unwrap())
+                .allow_origin("https://maresto.id".parse::<HeaderValue>().unwrap())
+                .allow_origin("https://inving.id".parse::<HeaderValue>().unwrap())
+                .allow_methods([Method::GET, Method::POST, Method::PUT, Method::PATCH, Method::DELETE]),
+        );
 
     let host = &config.server.as_ref().unwrap().host;
     let port = &config.server.as_ref().unwrap().port;
