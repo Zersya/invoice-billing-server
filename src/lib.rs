@@ -5,8 +5,10 @@ use std::net::SocketAddr;
 use std::str::FromStr;
 
 use axum::{
+    http::HeaderValue,
+    http::Method,
     routing::{get, post, put},
-    Router, http::HeaderValue, http::Method
+    Router,
 };
 
 use dotenvy::dotenv;
@@ -57,6 +59,13 @@ pub async fn axum() {
     let merchant_middleware =
         axum::middleware::from_fn_with_state(pool.clone(), middlewares::merchant::check_merchant);
 
+    let origins = [
+        "http://localhost:5173".parse().unwrap(),
+        "http://maresto.id".parse().unwrap(),
+        "http://inving.id".parse().unwrap(),
+        "http://vercel.app".parse().unwrap(),
+    ];
+
     let app = Router::with_state(pool.clone())
         .route("/users", get(handlers::user::get_users))
         .route(
@@ -98,10 +107,15 @@ pub async fn axum() {
         .route("/", get(handlers::user::hello_world))
         .layer(
             CorsLayer::new()
-                .allow_origin("http://localhost:5173".parse::<HeaderValue>().unwrap())
-                .allow_origin("https://maresto.id".parse::<HeaderValue>().unwrap())
-                .allow_origin("https://inving.id".parse::<HeaderValue>().unwrap())
-                .allow_methods([Method::GET, Method::POST, Method::PUT, Method::PATCH, Method::DELETE]),
+                .allow_origin(origins)
+                .allow_headers(tower_http::cors::Any)
+                .allow_methods([
+                    Method::GET,
+                    Method::POST,
+                    Method::PUT,
+                    Method::PATCH,
+                    Method::DELETE,
+                ]),
         );
 
     let host = &config.server.as_ref().unwrap().host;
