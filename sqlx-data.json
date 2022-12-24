@@ -691,56 +691,6 @@
     },
     "query": "\n            SELECT\n                a.id,\n                a.customer_id,\n                a.value,\n                c.name\n            FROM\n                customer_contact_channels a\n                LEFT JOIN customers b ON b.id = a.customer_id\n                LEFT JOIN contact_channels c ON c.id = a.contact_channel_id\n            WHERE \n                a.customer_id = $1 AND b.merchant_id = $2 AND a.deleted_at IS NULL\n            GROUP BY\n                a.id, c.name\n            "
   },
-  "33954bcfebca68ef5435015a47c72189dcfc2d3c3907c2b7b6d7953cd3c1ff43": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "name",
-          "ordinal": 1,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "merchant_id",
-          "ordinal": 2,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "created_at",
-          "ordinal": 3,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "updated_at",
-          "ordinal": 4,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "deleted_at",
-          "ordinal": 5,
-          "type_info": "Timestamp"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        true
-      ],
-      "parameters": {
-        "Left": [
-          "Uuid"
-        ]
-      }
-    },
-    "query": "\n            SELECT *\n            FROM customers\n            WHERE merchant_id = $1 AND deleted_at IS NULL\n            "
-  },
   "428648e5cd079233bfcccabc0f329304dbe691bbe5017731748de0d9b2ce6d6f": {
     "describe": {
       "columns": [
@@ -803,6 +753,68 @@
       }
     },
     "query": "\n            SELECT *\n            FROM oauth_access_tokens\n            WHERE access_token = $1 AND revoked_at IS NULL AND expires_at > $2\n            "
+  },
+  "469dd2b8dee84df734dc1ce42565ef0a36487076f10a263eb25142e0034c9cf6": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "name",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "merchant_id",
+          "ordinal": 2,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 3,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 4,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "deleted_at",
+          "ordinal": 5,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "contact_channel_id",
+          "ordinal": 6,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "contact_channel_name",
+          "ordinal": 7,
+          "type_info": "Varchar"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            SELECT\n                customers.*, customer_contact_channels.contact_channel_id, contact_channels.name as contact_channel_name\n            FROM\n                customers\n                INNER JOIN customer_contact_channels ON customer_contact_channels.customer_id = customers.id\n                INNER JOIN contact_channels ON contact_channels.id = customer_contact_channels.contact_channel_id\n            WHERE\n                merchant_id = $1\n                AND customers.deleted_at IS NULL\n            "
   },
   "47406dff372f4b4b718077e3f0cd4052f7f3da70296d596dca098db48baed32a": {
     "describe": {
