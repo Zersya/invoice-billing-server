@@ -1,0 +1,61 @@
+# fly.toml file generated for invoice-billing-server on 2022-12-24T22:41:14+07:00
+
+app = "invoice-billing-server"
+kill_signal = "SIGINT"
+kill_timeout = 5
+processes = []
+
+[env]
+  DATABASE_URL="postgres://invoice_billing_server:Ymunt8Y99LPYCHu@top2.nearest.of.invoice-billing-server-db.internal:5432/invoice_billing_server?sslmode=disable"
+  APP_NAME="inving_server"
+  APP_HOST="api.inving.maresto.id"
+  ENV="development"
+
+  APPKEY="lWHTaCmtfz0bWvOZpUsKerQK8ZwbMRed"
+  SQLX_OFFLINE="true"
+  SERVER_HOST="0.0.0.0"
+  SERVER_PORT="9000"
+  PG_USER="invoice_billing_server"
+  PG_PASSWORD="Ymunt8Y99LPYCHu"
+  PG_HOST="top2.nearest.of.invoice-billing-server-db.internal"
+  PG_PORT="5432"
+  PG_DBNAME="invoice_billing_server"
+  PG_POOLMINSIZE="15"
+  PG_POOLMAXSIZE="30"
+
+  WHATSAPP_API_KEY="YOUR_API_KEY"
+  WHATSAPP_BASE_URL="https://wa-api.maresto.id"
+
+  XENDIT_BASE_URL="https://api.xendit.co/"
+  XENDIT_SECRET_KEY="xnd_development_ShRPLTwbXDfpDbdlGDuWnSKpsrpoat1n9puePOFiti1IoJAWrQ74BOAJOjNAg"
+  XENDIT_PUBLIC_KEY="xnd_public_development_qBP1UP8iyzc3DKczjoz1pRGANVHv5Pavy99n0t0rL6LtS0ihxY16jg2hUMllC"
+
+[experimental]
+  allowed_public_ports = []
+  auto_rollback = true
+
+[[services]]
+  http_checks = []
+  internal_port = 9000
+  processes = ["app"]
+  protocol = "tcp"
+  script_checks = []
+  [services.concurrency]
+    hard_limit = 25
+    soft_limit = 20
+    type = "connections"
+
+  [[services.ports]]
+    force_https = true
+    handlers = ["http"]
+    port = 80
+
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port = 443
+
+  [[services.tcp_checks]]
+    grace_period = "1s"
+    interval = "15s"
+    restart_limit = 0
+    timeout = "2s"
