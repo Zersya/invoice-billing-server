@@ -1,5 +1,67 @@
 {
   "db": "PostgreSQL",
+  "09fde36c2917e1a8e7d5121af85a104a79160c6c7621a7af278a5a1d08071bf6": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "name",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "merchant_id",
+          "ordinal": 2,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 3,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 4,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "deleted_at",
+          "ordinal": 5,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "contact_channel_id",
+          "ordinal": 6,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "contact_channel_name",
+          "ordinal": 7,
+          "type_info": "Varchar"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            SELECT\n                customers.*, customer_contact_channels.contact_channel_id as contact_channel_id, contact_channels.name as contact_channel_name\n            FROM\n                customers\n                INNER JOIN customer_contact_channels ON customer_contact_channels.customer_id = customers.id\n                INNER JOIN contact_channels ON contact_channels.id = customer_contact_channels.contact_channel_id\n            WHERE\n                merchant_id = $1\n                AND customers.deleted_at IS NULL\n            "
+  },
   "0afcfb382f5541cd6da152a884e48d34be9aa3e3ab93210fab5f37b44c86de63": {
     "describe": {
       "columns": [
@@ -753,68 +815,6 @@
       }
     },
     "query": "\n            SELECT *\n            FROM oauth_access_tokens\n            WHERE access_token = $1 AND revoked_at IS NULL AND expires_at > $2\n            "
-  },
-  "469dd2b8dee84df734dc1ce42565ef0a36487076f10a263eb25142e0034c9cf6": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "name",
-          "ordinal": 1,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "merchant_id",
-          "ordinal": 2,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "created_at",
-          "ordinal": 3,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "updated_at",
-          "ordinal": 4,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "deleted_at",
-          "ordinal": 5,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "contact_channel_id",
-          "ordinal": 6,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "contact_channel_name",
-          "ordinal": 7,
-          "type_info": "Varchar"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        false,
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Uuid"
-        ]
-      }
-    },
-    "query": "\n            SELECT\n                customers.*, customer_contact_channels.contact_channel_id, contact_channels.name as contact_channel_name\n            FROM\n                customers\n                INNER JOIN customer_contact_channels ON customer_contact_channels.customer_id = customers.id\n                INNER JOIN contact_channels ON contact_channels.id = customer_contact_channels.contact_channel_id\n            WHERE\n                merchant_id = $1\n                AND customers.deleted_at IS NULL\n            "
   },
   "47406dff372f4b4b718077e3f0cd4052f7f3da70296d596dca098db48baed32a": {
     "describe": {
