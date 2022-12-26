@@ -18,13 +18,18 @@ pub struct RequestInvoiceSchedule {
 fn validate_repeat_interval_type(
     repeat_interval_type: &str,
 ) -> Result<(), validator::ValidationError> {
-    if repeat_interval_type == "WEEKLY" || repeat_interval_type == "MONTHLY" {
+    if repeat_interval_type == "PERMINUTE"
+        || repeat_interval_type == "HOURLY"
+        || repeat_interval_type == "DAILY"
+        || repeat_interval_type == "WEEKLY"
+        || repeat_interval_type == "MONTHLY"
+    {
         return Ok(());
     }
 
     let err = validator::ValidationError {
         code: Cow::from("invalid_repeat_interval_type"),
-        message: Some(Cow::from("Repeat Interval type must be WEEKLY or MONTHLY")),
+        message: Some(Cow::from("Repeat Interval type must be PERMINUTE, HOURLY, DAILY, WEEKLY or MONTHLY")),
         params: Default::default(),
     };
 
