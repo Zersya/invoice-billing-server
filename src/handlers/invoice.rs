@@ -151,7 +151,16 @@ pub async fn set_invoice_scheduler(
 
     let repeat_interval_type = body.repeat_interval_type.unwrap().clone();
 
-    let repeat_interval = if repeat_interval_type == "WEEKLY" {
+    let repeat_interval = if repeat_interval_type == "PERMINUTE" {
+        let duration = chrono::Duration::minutes(1).num_seconds();
+        duration
+    } else if repeat_interval_type == "HOURLY" {
+        let duration = chrono::Duration::hours(1).num_seconds();
+        duration
+    } else if repeat_interval_type == "DAILY" {
+        let duration = chrono::Duration::days(1).num_seconds();
+        duration
+    } else if repeat_interval_type == "WEEKLY" {
         let duration = chrono::Duration::weeks(1).num_seconds();
         duration
     } else if repeat_interval_type == "MONTHLY" {
