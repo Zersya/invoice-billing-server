@@ -24,7 +24,7 @@ processes = []
   PG_POOLMAXSIZE="30"
 
   WHATSAPP_API_KEY="YOUR_API_KEY"
-  WHATSAPP_BASE_URL="https://wa-api.maresto.id"
+  WHATSAPP_BASE_URL="https://simple-whatsapp-api.fly.dev"
 
   XENDIT_BASE_URL="https://api.xendit.co/"
   XENDIT_SECRET_KEY="xnd_development_ShRPLTwbXDfpDbdlGDuWnSKpsrpoat1n9puePOFiti1IoJAWrQ74BOAJOjNAg"

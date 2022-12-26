@@ -21,6 +21,18 @@ pub struct Invoice {
     pub xendit_invoice_payload: Option<Value>,
 }
 
+#[derive(Serialize, Debug)]
+pub struct InvoiceWithCustomer {
+    pub id: Uuid,
+    pub invoice_number: String,
+    pub customer_id: Uuid,
+    pub customer_name: String,
+    pub total_amount: i32,
+    pub invoice_date: NaiveDateTime,
+    pub created_at: NaiveDateTime,
+    pub is_schedule: Option<bool>,
+}
+
 impl Invoice {
     pub async fn create(
         db: &sqlx::PgPool,
@@ -115,15 +127,26 @@ impl Invoice {
     pub async fn get_by_merchat_user_id(
         db: &sqlx::PgPool,
         user_id: &Uuid,
-    ) -> Result<Vec<Invoice>, sqlx::Error> {
+    ) -> Result<Vec<InvoiceWithCustomer>, sqlx::Error> {
         let invoices = sqlx::query_as!(
-            Invoice,
+            InvoiceWithCustomer,
             r#"
-            SELECT invoices.*
+            SELECT 
+                invoices.id, 
+                invoices.invoice_number, 
+                invoices.customer_id, 
+                customers.name as customer_name, 
+                invoices.total_amount, 
+                invoices.invoice_date, 
+                invoices.created_at, 
+                job_schedules.id IS NOT NULL as is_schedule
             FROM invoices
-            INNER JOIN merchants ON merchants.id = invoices.merchant_id
-            INNER JOIN users ON users.id = merchants.user_id
+                INNER JOIN merchants ON merchants.id = invoices.merchant_id
+                INNER JOIN users ON users.id = merchants.user_id
+                INNER JOIN customers ON customers.id = invoices.customer_id
+                LEFT JOIN job_schedules ON job_schedules.job_data->>'invoice_id' = invoices.id::text
             WHERE users.id = $1
+            ORDER BY invoices.created_at DESC
             "#,
             user_id
         )

@@ -159,104 +159,6 @@
     },
     "query": "\n            SELECT *\n            FROM customers\n            WHERE id = $1 AND merchant_id = $2 AND deleted_at IS NULL\n            "
   },
-  "17e65562c952c811af59df787604406f498f8e2eb2dd5200d4b013ddc5bbf3b6": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "invoice_number",
-          "ordinal": 1,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "merchant_id",
-          "ordinal": 2,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "customer_id",
-          "ordinal": 3,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "amount",
-          "ordinal": 4,
-          "type_info": "Int4"
-        },
-        {
-          "name": "total_amount",
-          "ordinal": 5,
-          "type_info": "Int4"
-        },
-        {
-          "name": "tax_amount",
-          "ordinal": 6,
-          "type_info": "Int4"
-        },
-        {
-          "name": "tax_rate",
-          "ordinal": 7,
-          "type_info": "Int4"
-        },
-        {
-          "name": "invoice_date",
-          "ordinal": 8,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "created_by",
-          "ordinal": 9,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "created_at",
-          "ordinal": 10,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "updated_at",
-          "ordinal": 11,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "deleted_at",
-          "ordinal": 12,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "xendit_invoice_payload",
-          "ordinal": 13,
-          "type_info": "Jsonb"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        true
-      ],
-      "parameters": {
-        "Left": [
-          "Uuid"
-        ]
-      }
-    },
-    "query": "\n            SELECT invoices.*\n            FROM invoices\n            INNER JOIN merchants ON merchants.id = invoices.merchant_id\n            INNER JOIN users ON users.id = merchants.user_id\n            WHERE users.id = $1\n            "
-  },
   "1a8ccb061a1a14ae75d1f7c0450ae730bbe371f25f53d2c01d41045a04325af2": {
     "describe": {
       "columns": [
@@ -2635,6 +2537,68 @@
       }
     },
     "query": "\n            SELECT\n                customers.*, \n                customer_contact_channels.contact_channel_id as contact_channel_id, \n                customer_contact_channels.value as contact_channel_value, \n                contact_channels.name as contact_channel_name\n            FROM\n                customers\n                INNER JOIN customer_contact_channels ON customer_contact_channels.customer_id = customers.id\n                INNER JOIN contact_channels ON contact_channels.id = customer_contact_channels.contact_channel_id\n            WHERE\n                merchant_id = $1\n                AND customers.deleted_at IS NULL\n            "
+  },
+  "f1e87288e636eef683f7c80a5106cf7d9bff8a946260780098be100f64e9cb1d": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "invoice_number",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "customer_id",
+          "ordinal": 2,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "customer_name",
+          "ordinal": 3,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "total_amount",
+          "ordinal": 4,
+          "type_info": "Int4"
+        },
+        {
+          "name": "invoice_date",
+          "ordinal": 5,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 6,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "is_schedule",
+          "ordinal": 7,
+          "type_info": "Bool"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            SELECT \n                invoices.id, \n                invoices.invoice_number, \n                invoices.customer_id, \n                customers.name as customer_name, \n                invoices.total_amount, \n                invoices.invoice_date, \n                invoices.created_at, \n                job_schedules.id IS NOT NULL as is_schedule\n            FROM invoices\n                INNER JOIN merchants ON merchants.id = invoices.merchant_id\n                INNER JOIN users ON users.id = merchants.user_id\n                INNER JOIN customers ON customers.id = invoices.customer_id\n                LEFT JOIN job_schedules ON job_schedules.job_data->>'invoice_id' = invoices.id::text\n            WHERE users.id = $1\n            ORDER BY invoices.created_at DESC\n            "
   },
   "f2d304e820cbaa04e9038ad44b2440a4839c02fca4881ca5d5c4c71e02b1f4ba": {
     "describe": {
