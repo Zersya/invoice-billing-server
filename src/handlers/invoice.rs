@@ -34,6 +34,26 @@ pub async fn get_by_authenticated_user(
     (StatusCode::OK, body).into_response()
 }
 
+pub async fn get_by_merchant_id(
+    State(db): State<PgPool>,
+    Extension(user_id): Extension<Uuid>,
+) -> Response {
+    let invoices = match Invoice::get_by_merchant_id(&db, &user_id).await {
+        Ok(invoices) => invoices,
+        Err(err) => {
+            let body = DefaultResponse::error("get invoices failed", err.to_string()).into_json();
+
+            return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+        }
+    };
+
+    let body = DefaultResponse::ok("get invoices by authenticated user success")
+        .with_data(json!(invoices))
+        .into_json();
+
+    (StatusCode::OK, body).into_response()
+}
+
 pub async fn create(
     State(db): State<PgPool>,
     Extension(user_id): Extension<Uuid>,
@@ -47,7 +67,7 @@ pub async fn create(
     let now = chrono::Utc::now().naive_utc();
 
     let invoice_number =
-        "INVC-".to_owned() + now.timestamp().to_string().as_str() + "-" + &user_id.to_string();
+        "INVC-".to_owned() + &user_id.to_string() + "-" + now.timestamp().to_string().as_str(); 
 
     let result = match send_invoice_to_xendit(
         &invoice_number,

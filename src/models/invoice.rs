@@ -156,6 +156,36 @@ impl Invoice {
         Ok(invoices)
     }
 
+    pub async fn get_by_merchant_id(
+        db: &sqlx::PgPool,
+        merchant_id: &Uuid,
+    ) -> Result<Vec<InvoiceWithCustomer>, sqlx::Error> {
+        let invoices = sqlx::query_as!(
+            InvoiceWithCustomer,
+            r#"
+            SELECT 
+                invoices.id, 
+                invoices.invoice_number, 
+                invoices.customer_id, 
+                customers.name as customer_name, 
+                invoices.total_amount, 
+                invoices.invoice_date, 
+                invoices.created_at, 
+                job_schedules.id IS NOT NULL as is_schedule
+            FROM invoices
+                INNER JOIN customers ON customers.id = invoices.customer_id
+                LEFT JOIN job_schedules ON job_schedules.job_data->>'invoice_id' = invoices.id::text
+            WHERE invoices.merchant_id = $1
+            ORDER BY invoices.created_at DESC
+            "#,
+            merchant_id
+        )
+        .fetch_all(db)
+        .await?;
+
+        Ok(invoices)
+    }
+
     pub async fn get_by_id(db: &sqlx::PgPool, id: &Uuid) -> Result<Invoice, sqlx::Error> {
         let invoice = sqlx::query_as!(
             Invoice,

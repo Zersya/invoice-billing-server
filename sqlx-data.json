@@ -1187,6 +1187,68 @@
     },
     "query": "\n            SELECT * FROM users\n            WHERE email = $1\n            "
   },
+  "7a39efa632ea6c0243ef0c9b185ee9d3543bd4bf703daabc42fd43fc186328bb": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "invoice_number",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "customer_id",
+          "ordinal": 2,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "customer_name",
+          "ordinal": 3,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "total_amount",
+          "ordinal": 4,
+          "type_info": "Int4"
+        },
+        {
+          "name": "invoice_date",
+          "ordinal": 5,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 6,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "is_schedule",
+          "ordinal": 7,
+          "type_info": "Bool"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            SELECT \n                invoices.id, \n                invoices.invoice_number, \n                invoices.customer_id, \n                customers.name as customer_name, \n                invoices.total_amount, \n                invoices.invoice_date, \n                invoices.created_at, \n                job_schedules.id IS NOT NULL as is_schedule\n            FROM invoices\n                INNER JOIN customers ON customers.id = invoices.customer_id\n                LEFT JOIN job_schedules ON job_schedules.job_data->>'invoice_id' = invoices.id::text\n            WHERE invoices.merchant_id = $1\n            ORDER BY invoices.created_at DESC\n            "
+  },
   "7dc071b11815e99b9b95fac4a5338e140ed5fbcab27dc72817d82544fce3827b": {
     "describe": {
       "columns": [

@@ -64,7 +64,6 @@ pub async fn axum() {
         "http://maresto.id".parse().unwrap(),
         "http://inving.id".parse().unwrap(),
         "http://vercel.app".parse().unwrap(),
-        "http://repl.co".parse().unwrap()
     ];
 
     let app = Router::with_state(pool.clone())
@@ -74,8 +73,12 @@ pub async fn axum() {
             put(handlers::invoice::set_invoice_scheduler),
         )
         .route(
+            "/merchant/:id/invoice/all",
+            get(handlers::invoice::get_by_authenticated_user),
+        )
+        .route(
             "/merchant/:id/invoice",
-            get(handlers::invoice::get_by_authenticated_user).post(handlers::invoice::create),
+            get(handlers::invoice::get_by_merchant_id).post(handlers::invoice::create),
         )
         .route(
             "/merchant/:id/customer/:id",
