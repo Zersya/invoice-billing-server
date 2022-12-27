@@ -64,6 +64,7 @@ pub async fn axum() {
         "http://maresto.id".parse().unwrap(),
         "http://inving.id".parse().unwrap(),
         "http://vercel.app".parse().unwrap(),
+        "http://repl.co".parse().unwrap()
     ];
 
     let app = Router::with_state(pool.clone())
