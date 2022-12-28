@@ -7,12 +7,13 @@ use validator_derive::Validate;
 
 #[derive(Deserialize, Validate, Debug)]
 pub struct RequestInvoiceSchedule {
-    #[validate(required, custom = "validate_repeat_interval_type")]
+    pub is_recurring: bool,
+    #[validate(custom = "validate_repeat_interval_type")]
     pub repeat_interval_type: Option<String>,
     #[serde(with = "default_date_format")]
-    pub start_at: NaiveDateTime,
+    pub start_at: Option<NaiveDateTime>,
     #[serde(with = "default_date_format")]
-    pub end_at: NaiveDateTime,
+    pub end_at: Option<NaiveDateTime>,
 }
 
 fn validate_repeat_interval_type(

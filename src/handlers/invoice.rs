@@ -1,3 +1,5 @@
+use std::ops::Add;
+
 use crate::models::invoice::Invoice;
 use crate::models::job_schedule::JobSchedule;
 use crate::models::requests::invoice::RequestCreateInvoice;
@@ -67,7 +69,7 @@ pub async fn create(
     let now = chrono::Utc::now().naive_utc();
 
     let invoice_number =
-        "INVC-".to_owned() + &user_id.to_string() + "-" + now.timestamp().to_string().as_str(); 
+        "INVC-".to_owned() + &user_id.to_string() + "-" + now.timestamp().to_string().as_str();
 
     let result = match send_invoice_to_xendit(
         &invoice_number,
@@ -97,7 +99,7 @@ pub async fn create(
         &total_amount,
         &tax_amount,
         &tax_rate,
-        &body.invoice_date,
+        &body.invoice_date.expect("invoice date is required"),
         &user_id,
     )
     .await
@@ -141,7 +143,31 @@ pub async fn set_invoice_scheduler(
         }
     }
 
-    if body.end_at < body.start_at {
+    if body.is_recurring && body.start_at.is_none() || body.end_at.is_none() {
+        let body = DefaultResponse::error(
+            "start_at and end_at is required for recurring invoice",
+            invoice_id.to_string(),
+        )
+        .into_json();
+
+        return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+    }
+
+    let now = chrono::Utc::now();
+
+    let start_at = if !body.is_recurring {
+        now.add(chrono::Duration::seconds(5)).naive_utc()
+    } else {
+        body.start_at.unwrap()
+    };
+
+    let end_at = if !body.is_recurring {
+        now.add(chrono::Duration::seconds(10)).naive_utc()
+    } else {
+        body.end_at.unwrap()
+    };
+
+    if end_at < start_at {
         let body = DefaultResponse::error(
             "end_at must be greater than start_at",
             invoice_id.to_string(),
@@ -151,9 +177,9 @@ pub async fn set_invoice_scheduler(
         return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
     }
 
-    if body.start_at < chrono::Utc::now().naive_utc() {
+    if start_at < now.naive_utc() {
         let body = DefaultResponse::error(
-            "start_at must be greater than current time",
+            format!("start_at must be greater than current time ( {} )", now).as_str(),
             invoice_id.to_string(),
         )
         .into_json();
@@ -161,7 +187,7 @@ pub async fn set_invoice_scheduler(
         return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
     }
 
-    if body.end_at - body.start_at < chrono::Duration::days(5) {
+    if body.is_recurring && end_at - start_at < chrono::Duration::days(5) {
         let body =
             DefaultResponse::error("duration must be more than 5 days", invoice_id.to_string())
                 .into_json();
@@ -169,9 +195,22 @@ pub async fn set_invoice_scheduler(
         return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
     }
 
+    if body.is_recurring && body.repeat_interval_type.is_none() {
+        let body = DefaultResponse::error(
+            "repeat_interval_type is required for recurring invoice",
+            invoice_id.to_string(),
+        )
+        .into_json();
+
+        return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+    }
+
     let repeat_interval_type = body.repeat_interval_type.unwrap().clone();
 
-    let repeat_interval = if repeat_interval_type == "PERMINUTE" {
+    let repeat_interval = if !body.is_recurring {
+        let duration = 5;
+        duration
+    } else if repeat_interval_type == "PERMINUTE" {
         let duration = chrono::Duration::minutes(1).num_seconds();
         duration
     } else if repeat_interval_type == "HOURLY" {
@@ -192,7 +231,11 @@ pub async fn set_invoice_scheduler(
     };
 
     // repeat count based on start and end date and repeat interval
-    let repeat_count = (body.end_at - body.start_at).num_seconds() / repeat_interval;
+    let repeat_count = if !body.is_recurring {
+        1
+    } else {
+        (end_at - start_at).num_seconds() / repeat_interval
+    };
 
     let invoice = match Invoice::get_by_id(&db, &invoice_id).await {
         Ok(invoice) => invoice,
@@ -217,7 +260,7 @@ pub async fn set_invoice_scheduler(
             "invoice_date": invoice.invoice_date,
             "created_by": user_id,
         })),
-        &body.start_at,
+        &start_at,
         Some(repeat_interval),
         repeat_count.to_i32(),
         None,

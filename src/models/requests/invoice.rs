@@ -7,16 +7,17 @@ use crate::utils::default_date_format;
 #[derive(Deserialize, Validate, Debug)]
 pub struct RequestCreateInvoice {
     pub customer_id: Uuid,
-    #[validate(range(min = 0, max = 999999999))]
+    #[validate(range(min = 10000, max = 10000000))]
     pub amount: i32,
     #[serde(with = "default_date_format")]
-    pub invoice_date: NaiveDateTime,
+    #[validate(required)]
+    pub invoice_date: Option<NaiveDateTime>,
 }
 
 impl RequestCreateInvoice {
     pub fn to_string_custom_amount(&self, amount: i32) -> String {
         format!(
-            "customer_id: {}, total_amount: {}, invoice_date: {}",
+            "customer_id: {}, total_amount: {}, invoice_date: {:?}",
             self.customer_id, amount, self.invoice_date
         )
     }

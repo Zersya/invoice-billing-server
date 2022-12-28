@@ -14,18 +14,30 @@ pub mod default_date_format {
         serializer.serialize_str(&s)
     }
 
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<NaiveDateTime, D::Error>
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<NaiveDateTime>, D::Error>
     where
         D: Deserializer<'de>,
     {
-        let s: String = Deserialize::deserialize(deserializer)?;
-        let dt = match NaiveDateTime::parse_from_str(&s, FORMAT) {
+
+        // if undefined, return None
+        let s: Option<String> = match Deserialize::deserialize(deserializer) {
+
+            Ok(s) => s,
+            Err(err) => return Err(serde::de::Error::custom(err)),
+            
+        };
+
+        if s.is_none() {
+            return Ok(None);
+        }
+
+        let dt = match NaiveDateTime::parse_from_str(&s.unwrap(), FORMAT) {
             Ok(dt) => dt,
             Err(err) => return Err(serde::de::Error::custom(err)),
         };
 
         let dt = dt.and_local_timezone(Local).unwrap();
 
-        Ok(dt.naive_utc())
+        Ok(Some(dt.naive_utc()))
     }
 }

@@ -30,7 +30,7 @@ pub struct InvoiceWithCustomer {
     pub total_amount: i32,
     pub invoice_date: NaiveDateTime,
     pub created_at: NaiveDateTime,
-    pub is_schedule: Option<bool>,
+    pub is_scheduled: Option<bool>,
 }
 
 impl Invoice {
@@ -139,7 +139,7 @@ impl Invoice {
                 invoices.total_amount, 
                 invoices.invoice_date, 
                 invoices.created_at, 
-                job_schedules.id IS NOT NULL as is_schedule
+                job_schedules.id IS NOT NULL as is_scheduled
             FROM invoices
                 INNER JOIN merchants ON merchants.id = invoices.merchant_id
                 INNER JOIN users ON users.id = merchants.user_id
@@ -171,7 +171,7 @@ impl Invoice {
                 invoices.total_amount, 
                 invoices.invoice_date, 
                 invoices.created_at, 
-                job_schedules.id IS NOT NULL as is_schedule
+                job_schedules.id IS NOT NULL as is_scheduled
             FROM invoices
                 INNER JOIN customers ON customers.id = invoices.customer_id
                 LEFT JOIN job_schedules ON job_schedules.job_data->>'invoice_id' = invoices.id::text
