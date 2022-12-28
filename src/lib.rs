@@ -81,6 +81,10 @@ pub async fn axum() {
             get(handlers::invoice::get_by_merchant_id).post(handlers::invoice::create),
         )
         .route(
+            "/merchant/:id/customer/:id/scheduled-job",
+            get(handlers::customer::get_job_schedule_by_customer)
+        )
+        .route(
             "/merchant/:id/customer/:id",
             put(handlers::customer::update).delete(handlers::customer::delete),
         )

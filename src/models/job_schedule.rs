@@ -169,4 +169,23 @@ impl JobSchedule {
 
         Ok(job_schedules)
     }
+
+    pub async fn get_by_job_data_json_by_customer_id(
+        db: &sqlx::PgPool,
+        customer_id: &str,
+    ) -> Result<JobSchedule, sqlx::Error> {
+        let job_schedules = sqlx::query_as!(
+            JobSchedule,
+            r#"
+            SELECT * FROM job_schedules
+            WHERE job_data->>'customer_id' = $1
+            LIMIT 1
+            "#,
+            customer_id
+        )
+        .fetch_one(db)
+        .await?;
+
+        Ok(job_schedules)
+    }
 }

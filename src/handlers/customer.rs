@@ -11,6 +11,7 @@ use crate::logger::Logger;
 use crate::models::contact_channel::ContactChannel;
 use crate::models::customer::Customer;
 use crate::models::customer_contact_channel::CustomerContactChannel;
+use crate::models::job_schedule::JobSchedule;
 use crate::models::requests::customer::{RequestCreateCustomer, RequestUpdateCustomer};
 use crate::models::responses::DefaultResponse;
 
@@ -87,7 +88,7 @@ pub async fn create(
     let phone_number = body.contact_channel_value.replace("+", "");
 
     // replace first 0 with 62 if phone number start with 0
-    let phone_number:String = if phone_number.starts_with("0") {
+    let phone_number: String = if phone_number.starts_with("0") {
         let mut phone = phone_number.clone();
         phone.replace_range(0..1, "62");
         phone
@@ -192,6 +193,33 @@ pub async fn get_contact_channels(
 
     let body = DefaultResponse::ok("get contact channels success")
         .with_data(json!(contact_channels))
+        .into_json();
+
+    (StatusCode::OK, body).into_response()
+}
+
+pub async fn get_job_schedule_by_customer(
+    State(db): State<PgPool>,
+    Extension(_): Extension<Uuid>,
+    Path((_, customer_id)): Path<(Uuid, Uuid)>,
+) -> Response {
+    let job_scheduled = match JobSchedule::get_by_job_data_json_by_customer_id(
+        &db,
+        &customer_id.to_string().as_str(),
+    )
+    .await
+    {
+        Ok(job_scheduled) => job_scheduled,
+        Err(err) => {
+            let body =
+                DefaultResponse::error("get job scheduled failed", err.to_string()).into_json();
+
+            return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+        }
+    };
+
+    let body = DefaultResponse::ok("get job scheduled success")
+        .with_data(json!(job_scheduled))
         .into_json();
 
     (StatusCode::OK, body).into_response()

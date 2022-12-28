@@ -36,9 +36,9 @@ pub async fn get_by_authenticated_user(
 
 pub async fn get_by_merchant_id(
     State(db): State<PgPool>,
-    Extension(user_id): Extension<Uuid>,
+    Path((merchant_id,)): Path<(Uuid,)>,
 ) -> Response {
-    let invoices = match Invoice::get_by_merchant_id(&db, &user_id).await {
+    let invoices = match Invoice::get_by_merchant_id(&db, &merchant_id).await {
         Ok(invoices) => invoices,
         Err(err) => {
             let body = DefaultResponse::error("get invoices failed", err.to_string()).into_json();

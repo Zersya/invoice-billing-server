@@ -1073,6 +1073,98 @@
     },
     "query": "\n            UPDATE job_schedules\n            SET run_at = $1\n            WHERE id = $2\n            RETURNING *\n            "
   },
+  "68e85f86cad1d400ad63b784697bac71b37015b183d427d201306aac325b2457": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "job_type",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "job_data",
+          "ordinal": 2,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "run_at",
+          "ordinal": 3,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "repeat_interval",
+          "ordinal": 4,
+          "type_info": "Int8"
+        },
+        {
+          "name": "repeat_count",
+          "ordinal": 5,
+          "type_info": "Int4"
+        },
+        {
+          "name": "dependencies",
+          "ordinal": 6,
+          "type_info": "Text"
+        },
+        {
+          "name": "status",
+          "ordinal": 7,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "retry_count",
+          "ordinal": 8,
+          "type_info": "Int4"
+        },
+        {
+          "name": "retry_interval",
+          "ordinal": 9,
+          "type_info": "Int4"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 10,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 11,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "deleted_at",
+          "ordinal": 12,
+          "type_info": "Timestamp"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true,
+        false,
+        true,
+        true,
+        true,
+        false,
+        true,
+        true,
+        false,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "\n            SELECT * FROM job_schedules\n            WHERE job_data->>'customer_id' = $1\n            LIMIT 1\n            "
+  },
   "744490a2f29cc7b33b75f903a1ceda3809bdc0ad6a2f215489f8474235ed2afc": {
     "describe": {
       "columns": [
