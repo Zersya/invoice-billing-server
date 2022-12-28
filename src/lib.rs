@@ -82,7 +82,7 @@ pub async fn axum() {
         )
         .route(
             "/merchant/:id/customer/:id/scheduled-job",
-            get(handlers::customer::get_job_schedule_by_customer)
+            get(handlers::customer::get_job_schedule_by_customer),
         )
         .route(
             "/merchant/:id/customer/:id",
@@ -95,6 +95,10 @@ pub async fn axum() {
         .route(
             "/merchant/:id/customer",
             get(handlers::customer::get_by_merchant_id).post(handlers::customer::create),
+        )
+        .route(
+            "/merchant/:id/scheduled-job",
+            get(handlers::merchant::get_job_schedule_by_merchant_id),
         )
         .route(
             "/merchant/:id",

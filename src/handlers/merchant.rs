@@ -1,3 +1,4 @@
+use crate::models::job_schedule::JobSchedule;
 use crate::models::merchant::Merchant;
 use crate::models::requests::merchant::RequestUpdateMerchant;
 use crate::models::responses::DefaultResponse;
@@ -108,6 +109,27 @@ pub async fn delete(
     };
 
     let body = DefaultResponse::ok("delete merchant success").into_json();
+
+    (StatusCode::OK, body).into_response()
+}
+
+
+pub async fn get_job_schedule_by_merchant_id(
+    State(db): State<PgPool>,
+    Path((merchant_id,)): Path<(Uuid,)>,
+) -> Response {
+    let job_schedules = match JobSchedule::get_by_job_data_json_by_merchant_id(&db, merchant_id.to_string().as_str()).await {
+        Ok(job_schedules) => job_schedules,
+        Err(err) => {
+            let body = DefaultResponse::error("get job schedules failed", err.to_string()).into_json();
+
+            return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+        }
+    };
+
+    let body = DefaultResponse::ok("get job schedules by merchant id success")
+        .with_data(json!(job_schedules))
+        .into_json();
 
     (StatusCode::OK, body).into_response()
 }

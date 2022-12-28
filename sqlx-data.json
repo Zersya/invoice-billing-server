@@ -1073,98 +1073,6 @@
     },
     "query": "\n            UPDATE job_schedules\n            SET run_at = $1\n            WHERE id = $2\n            RETURNING *\n            "
   },
-  "68e85f86cad1d400ad63b784697bac71b37015b183d427d201306aac325b2457": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Int4"
-        },
-        {
-          "name": "job_type",
-          "ordinal": 1,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "job_data",
-          "ordinal": 2,
-          "type_info": "Jsonb"
-        },
-        {
-          "name": "run_at",
-          "ordinal": 3,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "repeat_interval",
-          "ordinal": 4,
-          "type_info": "Int8"
-        },
-        {
-          "name": "repeat_count",
-          "ordinal": 5,
-          "type_info": "Int4"
-        },
-        {
-          "name": "dependencies",
-          "ordinal": 6,
-          "type_info": "Text"
-        },
-        {
-          "name": "status",
-          "ordinal": 7,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "retry_count",
-          "ordinal": 8,
-          "type_info": "Int4"
-        },
-        {
-          "name": "retry_interval",
-          "ordinal": 9,
-          "type_info": "Int4"
-        },
-        {
-          "name": "created_at",
-          "ordinal": 10,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "updated_at",
-          "ordinal": 11,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "deleted_at",
-          "ordinal": 12,
-          "type_info": "Timestamp"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        true,
-        false,
-        true,
-        true,
-        true,
-        false,
-        true,
-        true,
-        false,
-        false,
-        true
-      ],
-      "parameters": {
-        "Left": [
-          "Text"
-        ]
-      }
-    },
-    "query": "\n            SELECT * FROM job_schedules\n            WHERE job_data->>'customer_id' = $1\n            LIMIT 1\n            "
-  },
   "744490a2f29cc7b33b75f903a1ceda3809bdc0ad6a2f215489f8474235ed2afc": {
     "describe": {
       "columns": [
@@ -1671,6 +1579,98 @@
     },
     "query": "\n            UPDATE customers\n            SET name = $1\n            WHERE id = $2 AND merchant_id = $3 AND deleted_at IS NULL\n            RETURNING *\n            "
   },
+  "99d4e0d1120869b063380c6bcd4b07be11465176e1dd758fa0029d04b2eb6d73": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "job_type",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "job_data",
+          "ordinal": 2,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "run_at",
+          "ordinal": 3,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "repeat_interval",
+          "ordinal": 4,
+          "type_info": "Int8"
+        },
+        {
+          "name": "repeat_count",
+          "ordinal": 5,
+          "type_info": "Int4"
+        },
+        {
+          "name": "dependencies",
+          "ordinal": 6,
+          "type_info": "Text"
+        },
+        {
+          "name": "status",
+          "ordinal": 7,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "retry_count",
+          "ordinal": 8,
+          "type_info": "Int4"
+        },
+        {
+          "name": "retry_interval",
+          "ordinal": 9,
+          "type_info": "Int4"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 10,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 11,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "deleted_at",
+          "ordinal": 12,
+          "type_info": "Timestamp"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true,
+        false,
+        true,
+        true,
+        true,
+        false,
+        true,
+        true,
+        false,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "\n            SELECT * FROM job_schedules\n            WHERE job_data->>'merchant_id' = $1\n            "
+  },
   "9d075ca542e0b906dcd59b3ca0ee59ec1668ebee02115f1cca0658964bb11c54": {
     "describe": {
       "columns": [
@@ -1862,6 +1862,98 @@
       }
     },
     "query": "\n            SELECT * FROM job_schedules\n            WHERE job_data->>'invoice_id' = $1\n            LIMIT 1\n            "
+  },
+  "9deb46a6855229df89d1cbf5534ee9479b4976ece6695267b2996c2316fdf64c": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "job_type",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "job_data",
+          "ordinal": 2,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "run_at",
+          "ordinal": 3,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "repeat_interval",
+          "ordinal": 4,
+          "type_info": "Int8"
+        },
+        {
+          "name": "repeat_count",
+          "ordinal": 5,
+          "type_info": "Int4"
+        },
+        {
+          "name": "dependencies",
+          "ordinal": 6,
+          "type_info": "Text"
+        },
+        {
+          "name": "status",
+          "ordinal": 7,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "retry_count",
+          "ordinal": 8,
+          "type_info": "Int4"
+        },
+        {
+          "name": "retry_interval",
+          "ordinal": 9,
+          "type_info": "Int4"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 10,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 11,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "deleted_at",
+          "ordinal": 12,
+          "type_info": "Timestamp"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true,
+        false,
+        true,
+        true,
+        true,
+        false,
+        true,
+        true,
+        false,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "\n            SELECT * FROM job_schedules\n            WHERE job_data->>'customer_id' = $1\n            "
   },
   "a1afe6143f5b0790c960156654858f6a0bb82ed39ffd82fe6e515ddeab0c5d9a": {
     "describe": {
