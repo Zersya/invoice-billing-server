@@ -4,18 +4,13 @@ use cron::Schedule;
 use sqlx::PgPool;
 use tokio::time::interval;
 
-use crate::models::{
-    customer_contact_channel::CustomerContactChannel, job_queue::JobQueue,
-    job_schedule::JobSchedule,
-};
+use crate::models::{job_queue::JobQueue, job_schedule::JobSchedule};
 
-use super::actions::{
-    prepare_invoice_via_channels, set_job_schedule_to_queue, whatsapp_send_message,
-};
+use super::actions::{prepare_invoice_via_channels, set_job_schedule_to_queue};
 
 pub async fn spawn_job_queue(pool: PgPool, schedule: Schedule) {
     tokio::spawn(async move {
-        let mut interval = interval(Duration::from_secs(1));
+        let mut interval = interval(Duration::from_secs(3));
 
         loop {
             interval.tick().await;
