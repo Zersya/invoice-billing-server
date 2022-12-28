@@ -263,9 +263,8 @@ pub async fn prepare_invoice_via_channels(
     match whatsapp_send_message(
         whatsapp_contact_channel.value.as_str(),
         format!(
-            "Please make a payment of *{}* within *{} days* to avoid incurring late fees. The *payment link* is {} and the *due date* is {}.",
+            "Please make a payment of *{}* to avoid incurring late fees. The *payment link* is {} and the *due date* is {}.",
             total_amount,
-            days,
             invoice_url,
             due_time
         )

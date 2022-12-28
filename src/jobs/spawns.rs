@@ -10,7 +10,7 @@ use super::actions::{prepare_invoice_via_channels, set_job_schedule_to_queue};
 
 pub async fn spawn_job_queue(pool: PgPool, schedule: Schedule) {
     tokio::spawn(async move {
-        let mut interval = interval(Duration::from_secs(3));
+        let mut interval = interval(Duration::from_secs(1));
 
         loop {
             interval.tick().await;
