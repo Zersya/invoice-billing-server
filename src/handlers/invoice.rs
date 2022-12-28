@@ -143,7 +143,7 @@ pub async fn set_invoice_scheduler(
         }
     }
 
-    if body.is_recurring && body.start_at.is_none() || body.end_at.is_none() {
+    if body.is_recurring && (body.start_at.is_none() || body.end_at.is_none()) {
         let body = DefaultResponse::error(
             "start_at and end_at is required for recurring invoice",
             invoice_id.to_string(),
@@ -205,9 +205,12 @@ pub async fn set_invoice_scheduler(
         return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
     }
 
-    let repeat_interval_type = body.repeat_interval_type.unwrap().clone();
+    let repeat_interval_type = match body.repeat_interval_type {
+        Some(repeat_interval_type) => repeat_interval_type,
+        None => "ONCE".to_string(),
+    };
 
-    let repeat_interval = if !body.is_recurring {
+    let repeat_interval = if repeat_interval_type == "ONCE" {
         let duration = 5;
         duration
     } else if repeat_interval_type == "PERMINUTE" {
@@ -232,7 +235,7 @@ pub async fn set_invoice_scheduler(
 
     // repeat count based on start and end date and repeat interval
     let repeat_count = if !body.is_recurring {
-        1
+        0
     } else {
         (end_at - start_at).num_seconds() / repeat_interval
     };
