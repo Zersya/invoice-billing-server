@@ -276,6 +276,7 @@ pub async fn set_invoice_scheduler(
         "send_invoice",
         Some(json!({
             "invoice_id": invoice.id,
+            "invoice_number": invoice.invoice_number,
             "title": invoice.title,
             "description": invoice.description,
             "customer_id": invoice.customer_id,
