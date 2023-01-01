@@ -9,6 +9,9 @@ pub struct RequestCreateInvoice {
     pub customer_id: Uuid,
     #[validate(range(min = 10000, max = 10000000))]
     pub amount: i32,
+    #[validate(required)]
+    pub title: Option<String>,
+    pub description: Option<String>,
     #[serde(with = "default_date_format")]
     #[validate(required)]
     pub invoice_date: Option<NaiveDateTime>,

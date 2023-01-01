@@ -19,6 +19,8 @@ pub struct Invoice {
     pub updated_at: NaiveDateTime,
     pub deleted_at: Option<NaiveDateTime>,
     pub xendit_invoice_payload: Option<Value>,
+    pub title: Option<String>,
+    pub description: Option<String>,
 }
 
 #[derive(Serialize, Debug)]
@@ -45,12 +47,14 @@ impl Invoice {
         tax_rate: &i32,
         invoice_date: &NaiveDateTime,
         created_by: &Uuid,
+        title: Option<&str>,
+        description: Option<&str>,
     ) -> Result<Invoice, sqlx::Error> {
         let invoice = sqlx::query_as!(
             Invoice,
             r#"
-            INSERT INTO invoices (invoice_number, customer_id, merchant_id, amount, total_amount, tax_amount, tax_rate, invoice_date, created_by)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            INSERT INTO invoices (invoice_number, customer_id, merchant_id, amount, total_amount, tax_amount, tax_rate, invoice_date, created_by, title, description)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
             RETURNING *
             "#,
             invoice_number,
@@ -61,7 +65,9 @@ impl Invoice {
             tax_amount,
             tax_rate,
             invoice_date,
-            created_by
+            created_by,
+            title,
+            description
         )
         .fetch_one(db)
         .await?;
@@ -101,12 +107,14 @@ impl Invoice {
         tax_rate: &i32,
         invoice_date: &NaiveDateTime,
         created_by: &Uuid,
+        title: Option<&str>,
+        description: Option<&str>,
     ) -> Result<Invoice, sqlx::Error> {
         let invoice = sqlx::query_as!(
             Invoice,
             r#"
-            INSERT INTO invoices (customer_id, merchant_id, amount, total_amount, tax_amount, tax_rate, invoice_date, created_by)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            INSERT INTO invoices (customer_id, merchant_id, amount, total_amount, tax_amount, tax_rate, invoice_date, created_by, title, description)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
             RETURNING *
             "#,
             customer_id,
@@ -116,7 +124,9 @@ impl Invoice {
             tax_amount,
             tax_rate,
             invoice_date,
-            created_by
+            created_by,
+            title,
+            description
         )
         .fetch_one(db)
         .await?;

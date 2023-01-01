@@ -238,111 +238,6 @@
     },
     "query": "\n            UPDATE merchants\n            SET name = $1, description = $2\n            WHERE id = $3 AND user_id = $4 AND deleted_at IS NULL\n            RETURNING *\n            "
   },
-  "24e43759d5a770f3f6f5bfa5df6abebca562517a582d9f7efa50864930518ae6": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "invoice_number",
-          "ordinal": 1,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "merchant_id",
-          "ordinal": 2,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "customer_id",
-          "ordinal": 3,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "amount",
-          "ordinal": 4,
-          "type_info": "Int4"
-        },
-        {
-          "name": "total_amount",
-          "ordinal": 5,
-          "type_info": "Int4"
-        },
-        {
-          "name": "tax_amount",
-          "ordinal": 6,
-          "type_info": "Int4"
-        },
-        {
-          "name": "tax_rate",
-          "ordinal": 7,
-          "type_info": "Int4"
-        },
-        {
-          "name": "invoice_date",
-          "ordinal": 8,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "created_by",
-          "ordinal": 9,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "created_at",
-          "ordinal": 10,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "updated_at",
-          "ordinal": 11,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "deleted_at",
-          "ordinal": 12,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "xendit_invoice_payload",
-          "ordinal": 13,
-          "type_info": "Jsonb"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        true
-      ],
-      "parameters": {
-        "Left": [
-          "Uuid",
-          "Uuid",
-          "Int4",
-          "Int4",
-          "Int4",
-          "Int4",
-          "Timestamp",
-          "Uuid"
-        ]
-      }
-    },
-    "query": "\n            INSERT INTO invoices (customer_id, merchant_id, amount, total_amount, tax_amount, tax_rate, invoice_date, created_by)\n            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)\n            RETURNING *\n            "
-  },
   "26e7e05427bc7dabcd7815d27764fda2baf4cfe60a2d2d6ee2a1f773dccbbce2": {
     "describe": {
       "columns": [
@@ -880,112 +775,6 @@
     },
     "query": "\n            SELECT *\n            FROM oauth_access_tokens\n            WHERE user_id = $1\n            ORDER BY created_at ASC\n            "
   },
-  "574eb9cadfa43d8f80129676b5817bb0eeab1fa6cc1d2e323be1d02219fae776": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "invoice_number",
-          "ordinal": 1,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "merchant_id",
-          "ordinal": 2,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "customer_id",
-          "ordinal": 3,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "amount",
-          "ordinal": 4,
-          "type_info": "Int4"
-        },
-        {
-          "name": "total_amount",
-          "ordinal": 5,
-          "type_info": "Int4"
-        },
-        {
-          "name": "tax_amount",
-          "ordinal": 6,
-          "type_info": "Int4"
-        },
-        {
-          "name": "tax_rate",
-          "ordinal": 7,
-          "type_info": "Int4"
-        },
-        {
-          "name": "invoice_date",
-          "ordinal": 8,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "created_by",
-          "ordinal": 9,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "created_at",
-          "ordinal": 10,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "updated_at",
-          "ordinal": 11,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "deleted_at",
-          "ordinal": 12,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "xendit_invoice_payload",
-          "ordinal": 13,
-          "type_info": "Jsonb"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        true
-      ],
-      "parameters": {
-        "Left": [
-          "Varchar",
-          "Uuid",
-          "Uuid",
-          "Int4",
-          "Int4",
-          "Int4",
-          "Int4",
-          "Timestamp",
-          "Uuid"
-        ]
-      }
-    },
-    "query": "\n            INSERT INTO invoices (invoice_number, customer_id, merchant_id, amount, total_amount, tax_amount, tax_rate, invoice_date, created_by)\n            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)\n            RETURNING *\n            "
-  },
   "5a286202714aaa0cb6038933f6b1819667fc7a620d48a57711d10492ffe0a69e": {
     "describe": {
       "columns": [
@@ -1084,6 +873,125 @@
       }
     },
     "query": "\n            UPDATE job_schedules\n            SET run_at = $1\n            WHERE id = $2\n            RETURNING *\n            "
+  },
+  "5e4d32884a49f73022da9d3253975c9e4617d23af749a5d036fcf540ab1b2c5c": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "invoice_number",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "merchant_id",
+          "ordinal": 2,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "customer_id",
+          "ordinal": 3,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "amount",
+          "ordinal": 4,
+          "type_info": "Int4"
+        },
+        {
+          "name": "total_amount",
+          "ordinal": 5,
+          "type_info": "Int4"
+        },
+        {
+          "name": "tax_amount",
+          "ordinal": 6,
+          "type_info": "Int4"
+        },
+        {
+          "name": "tax_rate",
+          "ordinal": 7,
+          "type_info": "Int4"
+        },
+        {
+          "name": "invoice_date",
+          "ordinal": 8,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "created_by",
+          "ordinal": 9,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 10,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 11,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "deleted_at",
+          "ordinal": 12,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "xendit_invoice_payload",
+          "ordinal": 13,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "title",
+          "ordinal": 14,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "description",
+          "ordinal": 15,
+          "type_info": "Varchar"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid",
+          "Int4",
+          "Int4",
+          "Int4",
+          "Int4",
+          "Timestamp",
+          "Uuid",
+          "Varchar",
+          "Varchar"
+        ]
+      }
+    },
+    "query": "\n            INSERT INTO invoices (customer_id, merchant_id, amount, total_amount, tax_amount, tax_rate, invoice_date, created_by, title, description)\n            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)\n            RETURNING *\n            "
   },
   "744490a2f29cc7b33b75f903a1ceda3809bdc0ad6a2f215489f8474235ed2afc": {
     "describe": {
@@ -2239,6 +2147,126 @@
     },
     "query": "\n            SELECT \n                invoices.id, \n                invoices.invoice_number, \n                invoices.customer_id, \n                customers.name as customer_name, \n                invoices.total_amount, \n                invoices.invoice_date, \n                invoices.created_at, \n                job_schedules.id IS NOT NULL as is_scheduled\n            FROM invoices\n                INNER JOIN merchants ON merchants.id = invoices.merchant_id\n                INNER JOIN users ON users.id = merchants.user_id\n                INNER JOIN customers ON customers.id = invoices.customer_id\n                LEFT JOIN job_schedules ON job_schedules.job_data->>'invoice_id' = invoices.id::text\n            WHERE users.id = $1\n            ORDER BY invoices.created_at DESC\n            "
   },
+  "d7e720c3e40b76004e29e68441c3d2ff88383682380d246c63754d73592814de": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "invoice_number",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "merchant_id",
+          "ordinal": 2,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "customer_id",
+          "ordinal": 3,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "amount",
+          "ordinal": 4,
+          "type_info": "Int4"
+        },
+        {
+          "name": "total_amount",
+          "ordinal": 5,
+          "type_info": "Int4"
+        },
+        {
+          "name": "tax_amount",
+          "ordinal": 6,
+          "type_info": "Int4"
+        },
+        {
+          "name": "tax_rate",
+          "ordinal": 7,
+          "type_info": "Int4"
+        },
+        {
+          "name": "invoice_date",
+          "ordinal": 8,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "created_by",
+          "ordinal": 9,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 10,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 11,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "deleted_at",
+          "ordinal": 12,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "xendit_invoice_payload",
+          "ordinal": 13,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "title",
+          "ordinal": 14,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "description",
+          "ordinal": 15,
+          "type_info": "Varchar"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "Uuid",
+          "Uuid",
+          "Int4",
+          "Int4",
+          "Int4",
+          "Int4",
+          "Timestamp",
+          "Uuid",
+          "Varchar",
+          "Varchar"
+        ]
+      }
+    },
+    "query": "\n            INSERT INTO invoices (invoice_number, customer_id, merchant_id, amount, total_amount, tax_amount, tax_rate, invoice_date, created_by, title, description)\n            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)\n            RETURNING *\n            "
+  },
   "d99474b6d36478362d7293e8ea50d3c68bbd00c8017be1c16b864654808b2aa8": {
     "describe": {
       "columns": [
@@ -2508,6 +2536,16 @@
           "name": "xendit_invoice_payload",
           "ordinal": 13,
           "type_info": "Jsonb"
+        },
+        {
+          "name": "title",
+          "ordinal": 14,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "description",
+          "ordinal": 15,
+          "type_info": "Varchar"
         }
       ],
       "nullable": [
@@ -2523,6 +2561,8 @@
         false,
         false,
         false,
+        true,
+        true,
         true,
         true
       ],
@@ -2973,6 +3013,16 @@
           "name": "xendit_invoice_payload",
           "ordinal": 13,
           "type_info": "Jsonb"
+        },
+        {
+          "name": "title",
+          "ordinal": 14,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "description",
+          "ordinal": 15,
+          "type_info": "Varchar"
         }
       ],
       "nullable": [
@@ -2988,6 +3038,8 @@
         false,
         false,
         false,
+        true,
+        true,
         true,
         true
       ],

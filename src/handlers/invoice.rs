@@ -81,7 +81,7 @@ pub async fn create(
         Ok(payload) => payload,
         Err(_) => {
             let body = DefaultResponse::error(
-                "Failed to send invoice",
+                "Failed to send invoice, please try again later",
                 "send invoice to xendit failed".to_string(),
             )
             .into_json();
@@ -89,6 +89,16 @@ pub async fn create(
             return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
         }
     };
+
+    if body.title.is_none() {
+        let body = DefaultResponse::error(
+            "Failed to create invoice, please provide title",
+            "title is required".to_string(),
+        )
+        .into_json();
+
+        return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+    }
 
     let invoice = match Invoice::create(
         &db,
@@ -101,6 +111,8 @@ pub async fn create(
         &tax_rate,
         &body.invoice_date.expect("invoice date is required"),
         &user_id,
+        body.title.as_deref(),
+        body.description.as_deref()
     )
     .await
     {
