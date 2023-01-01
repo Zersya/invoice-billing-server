@@ -1,7 +1,6 @@
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use uuid::Uuid;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct JobSchedule {
@@ -11,6 +10,7 @@ pub struct JobSchedule {
     pub run_at: NaiveDateTime,
     pub repeat_interval: Option<i64>,
     pub repeat_count: Option<i32>,
+    pub total_repeat_count: Option<i32>,
     pub dependencies: Option<String>,
     pub status: String,
     pub retry_count: Option<i32>,
@@ -28,6 +28,7 @@ impl JobSchedule {
         run_at: &NaiveDateTime,
         repeat_interval: Option<i64>,
         repeat_count: Option<i32>,
+        total_repeat_count: Option<i32>,
         dependencies: Option<String>,
         status: &str,
         retry_count: Option<i32>,
@@ -36,8 +37,8 @@ impl JobSchedule {
         let job_schedule = sqlx::query_as!(
             JobSchedule,
             r#"
-            INSERT INTO job_schedules (job_type, job_data, run_at, repeat_interval, repeat_count, dependencies, status, retry_count, retry_interval)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            INSERT INTO job_schedules (job_type, job_data, run_at, repeat_interval, repeat_count, total_repeat_count, dependencies, status, retry_count, retry_interval)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
             RETURNING *
             "#,
             job_type,
@@ -45,6 +46,7 @@ impl JobSchedule {
             run_at,
             repeat_interval,
             repeat_count,
+            total_repeat_count,
             dependencies,
             status,
             retry_count,

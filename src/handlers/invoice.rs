@@ -266,6 +266,7 @@ pub async fn set_invoice_scheduler(
         &start_at,
         Some(repeat_interval),
         repeat_count.to_i32(),
+        repeat_count.to_i32(),
         None,
         "scheduled",
         None,

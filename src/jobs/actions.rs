@@ -185,7 +185,7 @@ pub async fn prepare_invoice_via_channels(
     };
 
     let total_amount = match job_data["total_amount"].as_i64() {
-        Some(total_amount) => total_amount.to_string(),
+        Some(total_amount) => total_amount,
         None => {
             return Err(Errors::new(&[(
                 "prepare_invoice",
@@ -257,8 +257,11 @@ pub async fn prepare_invoice_via_channels(
 
     let now = Utc::now();
     let due_time = &now.add(Duration::seconds(repeat_interval));
-    let days = now.signed_duration_since(*due_time).num_days();
+    let _ = now.signed_duration_since(*due_time).num_days();
     let due_time = format!("{}", due_time.format("%d/%m/%Y - %H:%M"));
+
+    
+    let total_amount = format!("Rp{:.2}", total_amount);
 
     match whatsapp_send_message(
         whatsapp_contact_channel.value.as_str(),

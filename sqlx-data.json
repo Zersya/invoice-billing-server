@@ -690,38 +690,43 @@
           "type_info": "Int4"
         },
         {
-          "name": "dependencies",
+          "name": "total_repeat_count",
           "ordinal": 6,
+          "type_info": "Int4"
+        },
+        {
+          "name": "dependencies",
+          "ordinal": 7,
           "type_info": "Text"
         },
         {
           "name": "status",
-          "ordinal": 7,
+          "ordinal": 8,
           "type_info": "Varchar"
         },
         {
           "name": "retry_count",
-          "ordinal": 8,
-          "type_info": "Int4"
-        },
-        {
-          "name": "retry_interval",
           "ordinal": 9,
           "type_info": "Int4"
         },
         {
-          "name": "created_at",
+          "name": "retry_interval",
           "ordinal": 10,
-          "type_info": "Timestamp"
+          "type_info": "Int4"
         },
         {
-          "name": "updated_at",
+          "name": "created_at",
           "ordinal": 11,
           "type_info": "Timestamp"
         },
         {
-          "name": "deleted_at",
+          "name": "updated_at",
           "ordinal": 12,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "deleted_at",
+          "ordinal": 13,
           "type_info": "Timestamp"
         }
       ],
@@ -730,6 +735,7 @@
         false,
         true,
         false,
+        true,
         true,
         true,
         true,
@@ -1014,38 +1020,43 @@
           "type_info": "Int4"
         },
         {
-          "name": "dependencies",
+          "name": "total_repeat_count",
           "ordinal": 6,
+          "type_info": "Int4"
+        },
+        {
+          "name": "dependencies",
+          "ordinal": 7,
           "type_info": "Text"
         },
         {
           "name": "status",
-          "ordinal": 7,
+          "ordinal": 8,
           "type_info": "Varchar"
         },
         {
           "name": "retry_count",
-          "ordinal": 8,
-          "type_info": "Int4"
-        },
-        {
-          "name": "retry_interval",
           "ordinal": 9,
           "type_info": "Int4"
         },
         {
-          "name": "created_at",
+          "name": "retry_interval",
           "ordinal": 10,
-          "type_info": "Timestamp"
+          "type_info": "Int4"
         },
         {
-          "name": "updated_at",
+          "name": "created_at",
           "ordinal": 11,
           "type_info": "Timestamp"
         },
         {
-          "name": "deleted_at",
+          "name": "updated_at",
           "ordinal": 12,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "deleted_at",
+          "ordinal": 13,
           "type_info": "Timestamp"
         }
       ],
@@ -1054,6 +1065,7 @@
         false,
         true,
         false,
+        true,
         true,
         true,
         true,
@@ -1358,38 +1370,43 @@
           "type_info": "Int4"
         },
         {
-          "name": "dependencies",
+          "name": "total_repeat_count",
           "ordinal": 6,
+          "type_info": "Int4"
+        },
+        {
+          "name": "dependencies",
+          "ordinal": 7,
           "type_info": "Text"
         },
         {
           "name": "status",
-          "ordinal": 7,
+          "ordinal": 8,
           "type_info": "Varchar"
         },
         {
           "name": "retry_count",
-          "ordinal": 8,
-          "type_info": "Int4"
-        },
-        {
-          "name": "retry_interval",
           "ordinal": 9,
           "type_info": "Int4"
         },
         {
-          "name": "created_at",
+          "name": "retry_interval",
           "ordinal": 10,
-          "type_info": "Timestamp"
+          "type_info": "Int4"
         },
         {
-          "name": "updated_at",
+          "name": "created_at",
           "ordinal": 11,
           "type_info": "Timestamp"
         },
         {
-          "name": "deleted_at",
+          "name": "updated_at",
           "ordinal": 12,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "deleted_at",
+          "ordinal": 13,
           "type_info": "Timestamp"
         }
       ],
@@ -1398,6 +1415,7 @@
         false,
         true,
         false,
+        true,
         true,
         true,
         true,
@@ -1551,38 +1569,43 @@
           "type_info": "Int4"
         },
         {
-          "name": "dependencies",
+          "name": "total_repeat_count",
           "ordinal": 6,
+          "type_info": "Int4"
+        },
+        {
+          "name": "dependencies",
+          "ordinal": 7,
           "type_info": "Text"
         },
         {
           "name": "status",
-          "ordinal": 7,
+          "ordinal": 8,
           "type_info": "Varchar"
         },
         {
           "name": "retry_count",
-          "ordinal": 8,
-          "type_info": "Int4"
-        },
-        {
-          "name": "retry_interval",
           "ordinal": 9,
           "type_info": "Int4"
         },
         {
-          "name": "created_at",
+          "name": "retry_interval",
           "ordinal": 10,
-          "type_info": "Timestamp"
+          "type_info": "Int4"
         },
         {
-          "name": "updated_at",
+          "name": "created_at",
           "ordinal": 11,
           "type_info": "Timestamp"
         },
         {
-          "name": "deleted_at",
+          "name": "updated_at",
           "ordinal": 12,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "deleted_at",
+          "ordinal": 13,
           "type_info": "Timestamp"
         }
       ],
@@ -1591,6 +1614,7 @@
         false,
         true,
         false,
+        true,
         true,
         true,
         true,
@@ -1608,106 +1632,6 @@
       }
     },
     "query": "\n            SELECT * FROM job_schedules\n            WHERE job_data->>'merchant_id' = $1\n            "
-  },
-  "9d075ca542e0b906dcd59b3ca0ee59ec1668ebee02115f1cca0658964bb11c54": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Int4"
-        },
-        {
-          "name": "job_type",
-          "ordinal": 1,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "job_data",
-          "ordinal": 2,
-          "type_info": "Jsonb"
-        },
-        {
-          "name": "run_at",
-          "ordinal": 3,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "repeat_interval",
-          "ordinal": 4,
-          "type_info": "Int8"
-        },
-        {
-          "name": "repeat_count",
-          "ordinal": 5,
-          "type_info": "Int4"
-        },
-        {
-          "name": "dependencies",
-          "ordinal": 6,
-          "type_info": "Text"
-        },
-        {
-          "name": "status",
-          "ordinal": 7,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "retry_count",
-          "ordinal": 8,
-          "type_info": "Int4"
-        },
-        {
-          "name": "retry_interval",
-          "ordinal": 9,
-          "type_info": "Int4"
-        },
-        {
-          "name": "created_at",
-          "ordinal": 10,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "updated_at",
-          "ordinal": 11,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "deleted_at",
-          "ordinal": 12,
-          "type_info": "Timestamp"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        true,
-        false,
-        true,
-        true,
-        true,
-        false,
-        true,
-        true,
-        false,
-        false,
-        true
-      ],
-      "parameters": {
-        "Left": [
-          "Varchar",
-          "Jsonb",
-          "Timestamp",
-          "Int8",
-          "Int4",
-          "Text",
-          "Varchar",
-          "Int4",
-          "Int4"
-        ]
-      }
-    },
-    "query": "\n            INSERT INTO job_schedules (job_type, job_data, run_at, repeat_interval, repeat_count, dependencies, status, retry_count, retry_interval)\n            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)\n            RETURNING *\n            "
   },
   "9dcec2972fb153eb17aee69407b29b64a6825a28c596ae2d8ebd21803ab6b930": {
     "describe": {
@@ -1743,38 +1667,43 @@
           "type_info": "Int4"
         },
         {
-          "name": "dependencies",
+          "name": "total_repeat_count",
           "ordinal": 6,
+          "type_info": "Int4"
+        },
+        {
+          "name": "dependencies",
+          "ordinal": 7,
           "type_info": "Text"
         },
         {
           "name": "status",
-          "ordinal": 7,
+          "ordinal": 8,
           "type_info": "Varchar"
         },
         {
           "name": "retry_count",
-          "ordinal": 8,
-          "type_info": "Int4"
-        },
-        {
-          "name": "retry_interval",
           "ordinal": 9,
           "type_info": "Int4"
         },
         {
-          "name": "created_at",
+          "name": "retry_interval",
           "ordinal": 10,
-          "type_info": "Timestamp"
+          "type_info": "Int4"
         },
         {
-          "name": "updated_at",
+          "name": "created_at",
           "ordinal": 11,
           "type_info": "Timestamp"
         },
         {
-          "name": "deleted_at",
+          "name": "updated_at",
           "ordinal": 12,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "deleted_at",
+          "ordinal": 13,
           "type_info": "Timestamp"
         }
       ],
@@ -1783,6 +1712,7 @@
         false,
         true,
         false,
+        true,
         true,
         true,
         true,
@@ -1835,38 +1765,43 @@
           "type_info": "Int4"
         },
         {
-          "name": "dependencies",
+          "name": "total_repeat_count",
           "ordinal": 6,
+          "type_info": "Int4"
+        },
+        {
+          "name": "dependencies",
+          "ordinal": 7,
           "type_info": "Text"
         },
         {
           "name": "status",
-          "ordinal": 7,
+          "ordinal": 8,
           "type_info": "Varchar"
         },
         {
           "name": "retry_count",
-          "ordinal": 8,
-          "type_info": "Int4"
-        },
-        {
-          "name": "retry_interval",
           "ordinal": 9,
           "type_info": "Int4"
         },
         {
-          "name": "created_at",
+          "name": "retry_interval",
           "ordinal": 10,
-          "type_info": "Timestamp"
+          "type_info": "Int4"
         },
         {
-          "name": "updated_at",
+          "name": "created_at",
           "ordinal": 11,
           "type_info": "Timestamp"
         },
         {
-          "name": "deleted_at",
+          "name": "updated_at",
           "ordinal": 12,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "deleted_at",
+          "ordinal": 13,
           "type_info": "Timestamp"
         }
       ],
@@ -1875,6 +1810,7 @@
         false,
         true,
         false,
+        true,
         true,
         true,
         true,
@@ -2337,38 +2273,43 @@
           "type_info": "Int4"
         },
         {
-          "name": "dependencies",
+          "name": "total_repeat_count",
           "ordinal": 6,
+          "type_info": "Int4"
+        },
+        {
+          "name": "dependencies",
+          "ordinal": 7,
           "type_info": "Text"
         },
         {
           "name": "status",
-          "ordinal": 7,
+          "ordinal": 8,
           "type_info": "Varchar"
         },
         {
           "name": "retry_count",
-          "ordinal": 8,
-          "type_info": "Int4"
-        },
-        {
-          "name": "retry_interval",
           "ordinal": 9,
           "type_info": "Int4"
         },
         {
-          "name": "created_at",
+          "name": "retry_interval",
           "ordinal": 10,
-          "type_info": "Timestamp"
+          "type_info": "Int4"
         },
         {
-          "name": "updated_at",
+          "name": "created_at",
           "ordinal": 11,
           "type_info": "Timestamp"
         },
         {
-          "name": "deleted_at",
+          "name": "updated_at",
           "ordinal": 12,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "deleted_at",
+          "ordinal": 13,
           "type_info": "Timestamp"
         }
       ],
@@ -2377,6 +2318,7 @@
         false,
         true,
         false,
+        true,
         true,
         true,
         true,
@@ -2430,38 +2372,43 @@
           "type_info": "Int4"
         },
         {
-          "name": "dependencies",
+          "name": "total_repeat_count",
           "ordinal": 6,
+          "type_info": "Int4"
+        },
+        {
+          "name": "dependencies",
+          "ordinal": 7,
           "type_info": "Text"
         },
         {
           "name": "status",
-          "ordinal": 7,
+          "ordinal": 8,
           "type_info": "Varchar"
         },
         {
           "name": "retry_count",
-          "ordinal": 8,
-          "type_info": "Int4"
-        },
-        {
-          "name": "retry_interval",
           "ordinal": 9,
           "type_info": "Int4"
         },
         {
-          "name": "created_at",
+          "name": "retry_interval",
           "ordinal": 10,
-          "type_info": "Timestamp"
+          "type_info": "Int4"
         },
         {
-          "name": "updated_at",
+          "name": "created_at",
           "ordinal": 11,
           "type_info": "Timestamp"
         },
         {
-          "name": "deleted_at",
+          "name": "updated_at",
           "ordinal": 12,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "deleted_at",
+          "ordinal": 13,
           "type_info": "Timestamp"
         }
       ],
@@ -2470,6 +2417,7 @@
         false,
         true,
         false,
+        true,
         true,
         true,
         true,
@@ -2585,6 +2533,113 @@
       }
     },
     "query": "\n            SELECT *\n            FROM invoices\n            WHERE id = $1\n            "
+  },
+  "ea09b316213e892e62940ffd1be49b272430c5d1e9b8e36f255e0161a2f867ca": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "job_type",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "job_data",
+          "ordinal": 2,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "run_at",
+          "ordinal": 3,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "repeat_interval",
+          "ordinal": 4,
+          "type_info": "Int8"
+        },
+        {
+          "name": "repeat_count",
+          "ordinal": 5,
+          "type_info": "Int4"
+        },
+        {
+          "name": "total_repeat_count",
+          "ordinal": 6,
+          "type_info": "Int4"
+        },
+        {
+          "name": "dependencies",
+          "ordinal": 7,
+          "type_info": "Text"
+        },
+        {
+          "name": "status",
+          "ordinal": 8,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "retry_count",
+          "ordinal": 9,
+          "type_info": "Int4"
+        },
+        {
+          "name": "retry_interval",
+          "ordinal": 10,
+          "type_info": "Int4"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 11,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 12,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "deleted_at",
+          "ordinal": 13,
+          "type_info": "Timestamp"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        true,
+        true,
+        false,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "Jsonb",
+          "Timestamp",
+          "Int8",
+          "Int4",
+          "Int4",
+          "Text",
+          "Varchar",
+          "Int4",
+          "Int4"
+        ]
+      }
+    },
+    "query": "\n            INSERT INTO job_schedules (job_type, job_data, run_at, repeat_interval, repeat_count, total_repeat_count, dependencies, status, retry_count, retry_interval)\n            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)\n            RETURNING *\n            "
   },
   "eadcdc282f5a776283b64453bac32cfe187d0a9bd32abadae613aa18d461bed9": {
     "describe": {

@@ -10,6 +10,8 @@ CREATE TABLE job_schedules (
     repeat_interval BIGINT,
     -- interval at which the job should be repeated (in seconds)
     repeat_count INTEGER DEFAULT 1,
+    -- number of times the job should be repeated, it decrement by 1 each time the job is run (NULL for unlimited)
+    total_repeat_count INTEGER DEFAULT 1,
     -- number of times the job should be repeated (NULL for unlimited)
     dependencies TEXT,
     -- IDs of other jobs that must be completed first
