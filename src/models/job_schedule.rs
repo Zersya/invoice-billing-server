@@ -181,6 +181,7 @@ impl JobSchedule {
             r#"
             SELECT * FROM job_schedules
             WHERE job_data->>'customer_id' = $1
+            ORDER BY created_at DESC
             "#,
             customer_id
         )

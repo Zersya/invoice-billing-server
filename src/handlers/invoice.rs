@@ -262,7 +262,7 @@ pub async fn set_invoice_scheduler(
         }
     };
 
-    let customer = match Customer::get_by_id(&db, &invoice.customer_id).await {
+    let customer = match Customer::get_by_id(&db, invoice.customer_id, &invoice.merchant_id).await {
         Ok(customer) => customer,
         Err(err) => {
             let body = DefaultResponse::error("get customer failed", err.to_string()).into_json();
