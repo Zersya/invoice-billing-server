@@ -58,7 +58,10 @@ impl JobSchedule {
         Ok(job_schedule)
     }
 
-    pub async fn get_schedule_by_id(db: &sqlx::PgPool, id: i32) -> Result<JobSchedule, sqlx::Error> {
+    pub async fn get_schedule_by_id(
+        db: &sqlx::PgPool,
+        id: i32,
+    ) -> Result<JobSchedule, sqlx::Error> {
         let job_schedule = sqlx::query_as!(
             JobSchedule,
             r#"
@@ -200,8 +203,28 @@ impl JobSchedule {
             r#"
             SELECT * FROM job_schedules
             WHERE job_data->>'merchant_id' = $1
+            ORDER BY created_at DESC
             "#,
             merchant_id
+        )
+        .fetch_all(db)
+        .await?;
+
+        Ok(job_schedules)
+    }
+
+    pub async fn get_by_job_data_json_by_user_id(
+        db: &sqlx::PgPool,
+        user_id: &str,
+    ) -> Result<Vec<JobSchedule>, sqlx::Error> {
+        let job_schedules = sqlx::query_as!(
+            JobSchedule,
+            r#"
+            SELECT * FROM job_schedules
+            WHERE job_data->>'created_by' = $1
+            ORDER BY created_at DESC
+            "#,
+            user_id
         )
         .fetch_all(db)
         .await?;

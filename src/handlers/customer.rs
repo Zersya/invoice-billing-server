@@ -224,3 +224,26 @@ pub async fn get_job_schedule_by_customer(
 
     (StatusCode::OK, body).into_response()
 }
+
+pub async fn get_job_schedule_by_authenticated(
+    State(db): State<PgPool>,
+    Extension(user_id): Extension<Uuid>,
+) -> Response {
+    let job_scheduled =
+        match JobSchedule::get_by_job_data_json_by_user_id(&db, user_id.to_string().as_str()).await
+        {
+            Ok(job_scheduled) => job_scheduled,
+            Err(err) => {
+                let body =
+                    DefaultResponse::error("get job scheduled failed", err.to_string()).into_json();
+
+                return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+            }
+        };
+
+    let body = DefaultResponse::ok("get job scheduled success")
+        .with_data(json!(job_scheduled))
+        .into_json();
+
+    (StatusCode::OK, body).into_response()
+}

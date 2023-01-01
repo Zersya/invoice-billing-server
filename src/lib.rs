@@ -5,7 +5,6 @@ use std::net::SocketAddr;
 use std::str::FromStr;
 
 use axum::{
-    http::HeaderValue,
     http::Method,
     routing::{get, post, put},
     Router,
@@ -108,6 +107,10 @@ pub async fn axum() {
         .route(
             "/merchant",
             get(handlers::merchant::get_by_authenticated_user).post(handlers::merchant::create),
+        )
+        .route(
+            "/scheduled-job",
+            get(handlers::customer::get_job_schedule_by_authenticated),
         )
         .route(
             "/contact-channels",
