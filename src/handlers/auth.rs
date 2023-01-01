@@ -2,6 +2,7 @@ use crate::errors::{Errors, FieldValidator};
 use crate::models::oauth_access_token::OauthAccessToken;
 use crate::models::requests::auth::{RequestLogin, RequestRegister};
 use crate::models::responses::DefaultResponse;
+use crate::models::tester::Tester;
 use crate::models::user::User;
 
 use argon2::{self, Config};
@@ -61,13 +62,7 @@ pub async fn register(State(db): State<PgPool>, Json(payload): Json<RequestRegis
         }
     };
 
-    let token = match set_access_token(&db, &user, &salt).await {
-        Ok(token) => token,
-        Err(err) => return (StatusCode::UNPROCESSABLE_ENTITY, err.into_response()).into_response(),
-    };
-
-    let body = DefaultResponse::ok("register success")
-        .with_access_token(token.access_token)
+    let body = DefaultResponse::ok("register success, we will inform you when your account is ready")
         .with_data(json!(user))
         .into_json();
 
@@ -79,7 +74,35 @@ pub async fn login(State(db): State<PgPool>, Json(payload): Json<RequestLogin>) 
 
     let email = extractor.extract("email", Some(payload.email));
     let password = extractor.extract("password", Some(payload.password));
-    extractor.check();
+    match extractor.check() {
+        Ok(_) => (),
+        Err(err) => return (StatusCode::UNPROCESSABLE_ENTITY, err.into_response()).into_response(),
+    }
+
+    let user = match User::get_by_email(&db, &email).await {
+        Ok(user) => user,
+        Err(err) => {
+            let body = DefaultResponse::error("login failed", err.to_string()).into_json();
+
+            return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+        }
+    };
+
+    let tester = match Tester::get_by_user_id(&db, user.id).await {
+        Ok(tester) => tester,
+        Err(err) => {
+            let body = DefaultResponse::error("It looks like you have not registered as a tester.", err.to_string()).into_json();
+
+            return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+        }
+    };
+
+    // if user.status == String::from("inactive") {
+    //     let body =
+    //         DefaultResponse::error("login failed", String::from("user is inactive")).into_json();
+
+    //     return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+    // }
 
     let salt = std::env::var("APPKEY").unwrap();
     let config = Config {
