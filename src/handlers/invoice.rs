@@ -1,5 +1,6 @@
 use std::ops::Add;
 
+use crate::models::customer::Customer;
 use crate::models::invoice::Invoice;
 use crate::models::job_schedule::JobSchedule;
 use crate::models::requests::invoice::RequestCreateInvoice;
@@ -261,12 +262,24 @@ pub async fn set_invoice_scheduler(
         }
     };
 
+    let customer = match Customer::get_by_id(&db, &invoice.customer_id).await {
+        Ok(customer) => customer,
+        Err(err) => {
+            let body = DefaultResponse::error("get customer failed", err.to_string()).into_json();
+
+            return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+        }
+    };
+
     let job_schedule = match JobSchedule::create(
         &db,
         "send_invoice",
         Some(json!({
             "invoice_id": invoice.id,
+            "title": invoice.title,
+            "description": invoice.description,
             "customer_id": invoice.customer_id,
+            "customer_name": customer.name,
             "merchant_id": invoice.merchant_id,
             "amount": invoice.amount,
             "total_amount": invoice.total_amount,
