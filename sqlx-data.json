@@ -148,6 +148,76 @@
     },
     "query": "\n            SELECT * FROM job_schedules\n            WHERE job_data->>'created_by' = $1\n            ORDER BY created_at DESC\n            "
   },
+  "0eb4e4cac467a5de7ad63aa37ad658fa5789950ba911febb2972e45da5f0a18f": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "job_type",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "job_data",
+          "ordinal": 2,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "job_schedule_id",
+          "ordinal": 3,
+          "type_info": "Int4"
+        },
+        {
+          "name": "priority",
+          "ordinal": 4,
+          "type_info": "Int4"
+        },
+        {
+          "name": "status",
+          "ordinal": 5,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 6,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 7,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "deleted_at",
+          "ordinal": 8,
+          "type_info": "Timestamp"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "Text",
+          "Text"
+        ]
+      }
+    },
+    "query": "\n            UPDATE job_queues\n            SET status = $1\n            WHERE job_data->>'invoice_id' = $2 AND job_data->>'created_by' = $3\n            RETURNING *\n            "
+  },
   "114716e6849acf262768677d2b4c230a6c4cc2dc6795b09b295ca1589004e3ca": {
     "describe": {
       "columns": [
@@ -1586,6 +1656,106 @@
       }
     },
     "query": "\n            UPDATE customers\n            SET deleted_at = NOW()\n            WHERE id = $1 AND merchant_id = $2 AND deleted_at IS NULL\n            RETURNING *\n            "
+  },
+  "926c831fb75dd200ea3797bb8db8971f1f79b75ccbb811566fb2fd916f9fcba1": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "job_type",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "job_data",
+          "ordinal": 2,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "run_at",
+          "ordinal": 3,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "repeat_interval",
+          "ordinal": 4,
+          "type_info": "Int8"
+        },
+        {
+          "name": "repeat_count",
+          "ordinal": 5,
+          "type_info": "Int4"
+        },
+        {
+          "name": "total_repeat_count",
+          "ordinal": 6,
+          "type_info": "Int4"
+        },
+        {
+          "name": "dependencies",
+          "ordinal": 7,
+          "type_info": "Text"
+        },
+        {
+          "name": "status",
+          "ordinal": 8,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "retry_count",
+          "ordinal": 9,
+          "type_info": "Int4"
+        },
+        {
+          "name": "retry_interval",
+          "ordinal": 10,
+          "type_info": "Int4"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 11,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 12,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "deleted_at",
+          "ordinal": 13,
+          "type_info": "Timestamp"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        true,
+        true,
+        false,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "Text",
+          "Text"
+        ]
+      }
+    },
+    "query": "\n            UPDATE job_schedules\n            SET status = $1\n            WHERE job_data->>'invoice_id' = $2 AND job_data->>'created_by' = $3\n            RETURNING *\n            "
   },
   "94302e263a770e4281b694330eec5bfdf0ce5f42219c5ecabd39d4062e814541": {
     "describe": {

@@ -65,6 +65,29 @@ impl JobQueue {
         Ok(job_queue)
     }
 
+    pub async fn update_status_by_invoice_id(
+            db: &sqlx::PgPool,
+            status: &str,
+            invoice_id: &str,
+            user_id: &str
+    ) -> Result<JobQueue, sqlx::Error> {
+
+        let job_queue = sqlx::query_as!(
+                JobQueue,
+            r#"
+            UPDATE job_queues
+            SET status = $1
+            WHERE job_data->>'invoice_id' = $2 AND job_data->>'created_by' = $3
+            RETURNING *
+            "#,
+            status, invoice_id, user_id
+        )
+        .fetch_one(db)
+        .await?;
+
+        Ok(job_queue)
+    }
+
     pub async fn get_top_priority_job(db: &sqlx::PgPool) -> Result<JobQueue, sqlx::Error> {
         let job_queue = sqlx::query_as!(
             JobQueue,

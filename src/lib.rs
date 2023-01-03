@@ -72,6 +72,10 @@ pub async fn axum() {
             put(handlers::invoice::set_invoice_scheduler),
         )
         .route(
+            "/merchant/:id/invoice/:id/update-status-schedule",
+            put(handlers::invoice::set_invoice_status),
+        )
+        .route(
             "/merchant/:id/invoice/all",
             get(handlers::invoice::get_by_authenticated_user),
         )

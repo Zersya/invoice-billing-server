@@ -2,9 +2,12 @@ use std::ops::Add;
 
 use crate::models::customer::Customer;
 use crate::models::invoice::Invoice;
+use crate::models::job_queue::JobQueue;
 use crate::models::job_schedule::JobSchedule;
 use crate::models::requests::invoice::RequestCreateInvoice;
-use crate::models::requests::invoice_schedule::RequestInvoiceSchedule;
+use crate::models::requests::invoice_schedule::{
+    RequestInvoiceSchedule, RequestSetStatusInvoiceSchedule,
+};
 use crate::models::responses::DefaultResponse;
 use crate::repositories::invoice::send_invoice_to_xendit;
 use axum::extract::Path;
@@ -113,7 +116,7 @@ pub async fn create(
         &body.invoice_date.expect("invoice date is required"),
         &user_id,
         body.title.as_deref(),
-        body.description.as_deref()
+        body.description.as_deref(),
     )
     .await
     {
@@ -139,6 +142,67 @@ pub async fn create(
         .into_json();
 
     (StatusCode::CREATED, body).into_response()
+}
+
+pub async fn set_invoice_status(
+    State(db): State<PgPool>,
+    Extension(user_id): Extension<Uuid>,
+    Path((_, invoice_id)): Path<(Uuid, Uuid)>,
+    Json(body): Json<RequestSetStatusInvoiceSchedule>,
+) -> Response {
+    match validator::Validate::validate(&body) {
+        Ok(_) => (),
+        Err(err) => {
+            let body =
+                DefaultResponse::error(err.to_string().as_str(), err.to_string()).into_json();
+            return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+        }
+    }
+
+    match JobSchedule::update_status_by_invoice_id(
+        &db,
+        &body.status,
+        invoice_id.to_string().as_str(),
+        user_id.to_string().as_str(),
+    )
+    .await
+    {
+        Ok(_) => (),
+        Err(err) => {
+            let body = DefaultResponse::error(
+                "no job schedule with related invoice found",
+                err.to_string(),
+            )
+            .into_json();
+
+            return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+        }
+    };
+
+    match JobQueue::update_status_by_invoice_id(
+        &db,
+        &body.status,
+        invoice_id.to_string().as_str(),
+        user_id.to_string().as_str(),
+    )
+    .await
+    {
+        Ok(_) => (),
+        Err(err) => {
+            let body = DefaultResponse::error(
+                "no job schedule with related invoice found",
+                err.to_string(),
+            )
+            .into_json();
+
+            return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+        }
+    }
+
+    let body = DefaultResponse::ok("update job status success")
+        .into_json();
+
+    (StatusCode::OK, body).into_response()
 }
 
 pub async fn set_invoice_scheduler(

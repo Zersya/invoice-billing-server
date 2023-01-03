@@ -15,6 +15,11 @@ pub struct RequestInvoiceSchedule {
     #[serde(with = "default_date_format")]
     pub end_at: Option<NaiveDateTime>,
 }
+#[derive(Deserialize, Validate, Debug)]
+pub struct RequestSetStatusInvoiceSchedule {
+    #[validate(custom = "validate_status_job_schedule")]
+    pub status: String,
+}
 
 fn validate_repeat_interval_type(
     repeat_interval_type: &str,
@@ -30,7 +35,26 @@ fn validate_repeat_interval_type(
 
     let err = validator::ValidationError {
         code: Cow::from("invalid_repeat_interval_type"),
-        message: Some(Cow::from("Repeat Interval type must be PERMINUTE, HOURLY, DAILY, WEEKLY or MONTHLY")),
+        message: Some(Cow::from(
+            "Repeat Interval type must be PERMINUTE, HOURLY, DAILY, WEEKLY or MONTHLY",
+        )),
+        params: Default::default(),
+    };
+
+    return Err(err);
+}
+
+fn validate_status_job_schedule(status: &str) -> Result<(), validator::ValidationError> {
+    if status == "pending" || status == "in_progress" || status == "completed" || status == "failed"
+    {
+        return Ok(());
+    }
+
+    let err = validator::ValidationError {
+        code: Cow::from("status"),
+        message: Some(Cow::from(
+            "Status Job must be pending, in_progress, completed, or failed",
+        )),
         params: Default::default(),
     };
 

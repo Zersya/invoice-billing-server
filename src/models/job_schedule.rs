@@ -156,6 +156,29 @@ impl JobSchedule {
         Ok(job_schedule)
     }
 
+    pub async fn update_status_by_invoice_id(
+        db: &sqlx::PgPool,
+        status: &str,
+        invoice_id: &str,
+        user_id: &str
+    ) -> Result<JobSchedule, sqlx::Error> {
+
+        let job_schedule = sqlx::query_as!(
+            JobSchedule,
+            r#"
+            UPDATE job_schedules
+            SET status = $1
+            WHERE job_data->>'invoice_id' = $2 AND job_data->>'created_by' = $3
+            RETURNING *
+            "#,
+            status, invoice_id, user_id
+        )
+        .fetch_one(db)
+        .await?;
+
+        Ok(job_schedule)
+    }
+
     pub async fn get_by_job_data_json_by_invoice_id(
         db: &sqlx::PgPool,
         invoice_id: &str,
