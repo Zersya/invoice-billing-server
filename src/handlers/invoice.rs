@@ -175,7 +175,7 @@ pub async fn set_invoice_status(
             )
             .into_json();
 
-            return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+            return (StatusCode::NOT_FOUND, body).into_response();
         }
     };
 
@@ -190,12 +190,12 @@ pub async fn set_invoice_status(
         Ok(_) => (),
         Err(err) => {
             let body = DefaultResponse::error(
-                "no job schedule with related invoice found",
+                "no job queue with related invoice found",
                 err.to_string(),
             )
             .into_json();
 
-            return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+            return (StatusCode::NOT_FOUND, body).into_response();
         }
     }
 
