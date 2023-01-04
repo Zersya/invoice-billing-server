@@ -33,6 +33,7 @@ pub struct InvoiceWithCustomer {
     pub invoice_date: NaiveDateTime,
     pub created_at: NaiveDateTime,
     pub is_scheduled: Option<bool>,
+    pub is_completed: Option<bool>,
     pub title: Option<String>,
     pub description: Option<String>,
 }
@@ -152,6 +153,7 @@ impl Invoice {
                 invoices.invoice_date, 
                 invoices.created_at, 
                 job_schedules.id IS NOT NULL as is_scheduled,
+                job_schedules.status = 'completed' as is_completed,
                 invoices.title,
                 invoices.description 
             FROM invoices
@@ -186,6 +188,7 @@ impl Invoice {
                 invoices.invoice_date, 
                 invoices.created_at, 
                 job_schedules.id IS NOT NULL as is_scheduled,
+                job_schedules.status = 'completed' as is_completed,
                 invoices.title,
                 invoices.description
             FROM invoices
