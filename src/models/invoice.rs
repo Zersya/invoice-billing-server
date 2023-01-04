@@ -3,6 +3,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use uuid::Uuid;
 
+use super::job_schedule::JobSchedule;
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Invoice {
     pub id: Uuid,
@@ -33,7 +35,7 @@ pub struct InvoiceWithCustomer {
     pub invoice_date: NaiveDateTime,
     pub created_at: NaiveDateTime,
     pub is_scheduled: Option<bool>,
-    pub is_completed: Option<bool>,
+    pub job_schedule: Option<Value>,
     pub title: Option<String>,
     pub description: Option<String>,
 }
@@ -153,7 +155,7 @@ impl Invoice {
                 invoices.invoice_date, 
                 invoices.created_at, 
                 job_schedules.id IS NOT NULL as is_scheduled,
-                job_schedules.status = 'completed' as is_completed,
+                row_to_json(job_schedules) as job_schedule,
                 invoices.title,
                 invoices.description 
             FROM invoices
@@ -188,7 +190,7 @@ impl Invoice {
                 invoices.invoice_date, 
                 invoices.created_at, 
                 job_schedules.id IS NOT NULL as is_scheduled,
-                job_schedules.status = 'completed' as is_completed,
+                row_to_json(job_schedules) as job_schedule,
                 invoices.title,
                 invoices.description
             FROM invoices
