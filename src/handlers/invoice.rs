@@ -230,6 +230,15 @@ pub async fn set_invoice_scheduler(
         return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
     }
 
+    match JobSchedule::get_by_job_data_json_by_invoice_id(&db, invoice_id.to_string().as_str()).await {
+        Ok(_) => {
+            let body =
+                DefaultResponse::error("Invoice is scheduled", "Found job schedule for invoice".to_string()).into_json();
+            return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+        },
+        Err(_) => ()
+    };
+
     let now = chrono::Utc::now();
 
     let start_at = if !body.is_recurring {

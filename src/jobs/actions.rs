@@ -29,7 +29,6 @@ pub async fn whatsapp_send_message(
     let datetime = schedule.last().unwrap();
 
     if datetime >= now {
-        println!("Sending message... {} {}", phone_number, message);
         let host = std::env::var("WHATSAPP_BASE_URL").unwrap();
         let whatsapp_api_key = std::env::var("WHATSAPP_API_KEY").unwrap();
 
@@ -238,28 +237,20 @@ pub async fn prepare_invoice_via_channels(
     let xendit_invoice_payload = invoice.xendit_invoice_payload.unwrap();
     let invoice_url = xendit_invoice_payload["invoice_url"].as_str().unwrap();
 
-    let job_schedule =
-        match JobSchedule::get_by_job_data_json_by_invoice_id(&pool, &invoice.id.to_string().as_str()).await {
-            Ok(job_schedule) => job_schedule,
-            Err(_) => {
-                return Err(Errors::new(&[(
-                    "prepare_invoice",
-                    "Failed to prepare invoice",
-                )]));
-            }
-        };
-
-    let repeat_interval = if job_schedule.repeat_interval.is_some() {
-        job_schedule.repeat_interval.unwrap()
-    } else {
-        2
-    };
+//    let job_schedule =
+//        match JobSchedule::get_by_job_data_json_by_invoice_id(&pool, &invoice.id.to_string().as_str()).await {
+//            Ok(job_schedule) => job_schedule,
+//            Err(_) => {
+//                return Err(Errors::new(&[(
+//                    "prepare_invoice",
+//                    "Failed to prepare invoice",
+//                )]));
+//            }
+//        };
 
     let now = Utc::now();
-    let due_time = &now.add(Duration::seconds(repeat_interval));
-    let _ = now.signed_duration_since(*due_time).num_days();
+    let due_time = &now.add(Duration::hours(24));
     let due_time = format!("{}", due_time.format("%d/%m/%Y - %H:%M"));
-
     
     let total_amount = format!("Rp{:.2}", total_amount);
 
