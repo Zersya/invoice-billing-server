@@ -10,6 +10,7 @@ pub struct Customer {
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
     pub deleted_at: Option<NaiveDateTime>,
+    pub tags: Vec<String>,
 }
 
 #[derive(Serialize, Debug)]
@@ -20,6 +21,7 @@ pub struct CustomerWithContactChannels {
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
     pub deleted_at: Option<NaiveDateTime>,
+    pub tags: Vec<String>,
     pub contact_channel_id: Uuid,
     pub contact_channel_value: String,
     pub contact_channel_name: String,
@@ -29,17 +31,19 @@ impl Customer {
     pub async fn create(
         db: &sqlx::PgPool,
         name: &String,
+        tags: &Vec<String>,
         merchant_id: &Uuid,
     ) -> Result<Customer, sqlx::Error> {
         let customer = sqlx::query_as!(
             Customer,
             r#"
-            INSERT INTO customers (name, merchant_id)
-            VALUES ($1, $2)
+            INSERT INTO customers (name, merchant_id, tags)
+            VALUES ($1, $2, $3)
             RETURNING *
             "#,
             name,
-            merchant_id
+            merchant_id,
+            tags
         )
         .fetch_one(db)
         .await?;
@@ -50,17 +54,19 @@ impl Customer {
     pub async fn create_using_transaction(
         db: &mut sqlx::Transaction<'_, sqlx::Postgres>,
         name: &String,
+        tags: &Vec<String>,
         merchant_id: &Uuid,
     ) -> Result<Customer, sqlx::Error> {
         let customer = sqlx::query_as!(
             Customer,
             r#"
-            INSERT INTO customers (name, merchant_id)
-            VALUES ($1, $2)
+            INSERT INTO customers (name, merchant_id, tags)
+            VALUES ($1, $2, $3)
             RETURNING *
             "#,
             name,
-            merchant_id
+            merchant_id,
+            tags
         )
         .fetch_one(db)
         .await?;
@@ -72,17 +78,19 @@ impl Customer {
         db: &sqlx::PgPool,
         id: &Uuid,
         name: &String,
+        tags: &Vec<String>,
         merchant_id: &Uuid,
     ) -> Result<Customer, sqlx::Error> {
         let customer = sqlx::query_as!(
             Customer,
             r#"
             UPDATE customers
-            SET name = $1
-            WHERE id = $2 AND merchant_id = $3 AND deleted_at IS NULL
+            SET name = $1, tags = $2
+            WHERE id = $3 AND merchant_id = $4 AND deleted_at IS NULL
             RETURNING *
             "#,
             name,
+            tags,
             id,
             merchant_id
         )

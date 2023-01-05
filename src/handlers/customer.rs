@@ -6,7 +6,9 @@ use reqwest::StatusCode;
 use serde_json::json;
 use sqlx::PgPool;
 use uuid::Uuid;
+use validator::ValidationErrorsKind;
 
+use crate::errors::Errors;
 use crate::logger::Logger;
 use crate::models::contact_channel::ContactChannel;
 use crate::models::customer::Customer;
@@ -62,10 +64,31 @@ pub async fn create(
     Path((merchant_id,)): Path<(Uuid,)>,
     Json(body): Json<RequestCreateCustomer>,
 ) -> Response {
+    let (name, tags, contact_channel_id, contact_channel_value) =
+        match validator::Validate::validate(&body) {
+            Ok(_) => (
+                body.name.unwrap(),
+                body.tags.unwrap(),
+                body.contact_channel_id.unwrap(),
+                body.contact_channel_value.unwrap(),
+            ),
+            Err(err) => {
+                
+                let value = Errors::into_string(err);
+
+                let body = DefaultResponse::error(
+                    value.as_str(),
+                    "".to_string(),
+                )
+                .into_json();
+                return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+            }
+        };
+
     let mut db_transaction = db.begin().await.expect("Failed to begin transaction");
 
     let customer =
-        match Customer::create_using_transaction(&mut db_transaction, &body.name, &merchant_id)
+        match Customer::create_using_transaction(&mut db_transaction, &name, &tags, &merchant_id)
             .await
         {
             Ok(customer) => customer,
@@ -85,7 +108,7 @@ pub async fn create(
         };
 
     // remove + in +62 from phone number
-    let phone_number = body.contact_channel_value.replace("+", "");
+    let phone_number = contact_channel_value.replace("+", "");
 
     // replace first 0 with 62 if phone number start with 0
     let phone_number: String = if phone_number.starts_with("0") {
@@ -99,7 +122,7 @@ pub async fn create(
     match CustomerContactChannel::create_using_transaction(
         &mut db_transaction,
         &customer.id,
-        &body.contact_channel_id,
+        &contact_channel_id,
         &phone_number,
     )
     .await
@@ -138,7 +161,16 @@ pub async fn update(
     Path((merchant_id, customer_id)): Path<(Uuid, Uuid)>,
     Json(body): Json<RequestUpdateCustomer>,
 ) -> Response {
-    let customer = match Customer::update(&db, &customer_id, &body.name, &merchant_id).await {
+    let (name, tags) = match validator::Validate::validate(&body) {
+        Ok(_) => (body.name.unwrap(), body.tags.unwrap()),
+        Err(err) => {
+            let body =
+                DefaultResponse::error(err.to_string().as_str(), err.to_string()).into_json();
+            return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+        }
+    };
+
+    let customer = match Customer::update(&db, &customer_id, &name, &tags, &merchant_id).await {
         Ok(customer) => customer,
         Err(err) => {
             let body =

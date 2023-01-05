@@ -4,7 +4,7 @@ use axum::{
     Json,
 };
 use serde_json::json;
-use validator::{Validate, ValidationError, ValidationErrors};
+use validator::{Validate, ValidationError, ValidationErrors, ValidationErrorsKind};
 
 use crate::models::responses::{DefaultResponse, Message};
 
@@ -23,6 +23,19 @@ impl Errors {
             errors.add(field, ValidationError::new(code));
         }
         Self { errors }
+    }
+
+    pub fn into_string(val_errs: ValidationErrors) -> String {
+        let key = val_errs.errors().keys().last().unwrap();
+        let value = val_errs.errors().get(key).unwrap();
+
+        let value = match value {
+            ValidationErrorsKind::Struct(_) => todo!(),
+            ValidationErrorsKind::List(_) => todo!(),
+            ValidationErrorsKind::Field(fields) => fields.first().unwrap().message.clone(),
+        };
+
+        return format!("Value {} is {:?}", key, value);
     }
 }
 
