@@ -225,4 +225,22 @@ impl Invoice {
             self.customer_id, self.total_amount, self.invoice_date
         )
     }
+
+    pub async fn update_invoice_date(db: &sqlx::PgPool, id: &Uuid, date: &NaiveDateTime) -> Result<Invoice, sqlx::Error> {
+        let invoice = sqlx::query_as!(
+            Invoice,
+            r#"
+            UPDATE invoices
+            SET invoice_date = $1
+            WHERE id = $2
+            RETURNING *
+            "#,
+            date,
+            id
+        )
+        .fetch_one(db)
+        .await?;
+
+        Ok(invoice)
+    }
 }

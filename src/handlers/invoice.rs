@@ -4,6 +4,7 @@ use crate::models::customer::Customer;
 use crate::models::invoice::Invoice;
 use crate::models::job_queue::JobQueue;
 use crate::models::job_schedule::JobSchedule;
+use crate::models::merchant::Merchant;
 use crate::models::requests::invoice::RequestCreateInvoice;
 use crate::models::requests::invoice_schedule::{
     RequestInvoiceSchedule, RequestSetStatusInvoiceSchedule,
@@ -344,6 +345,15 @@ pub async fn set_invoice_scheduler(
         }
     };
 
+    let merchant = match Merchant::get_by_id(&db, invoice.merchant_id).await {
+        Ok(merchant) => merchant,
+        Err(err) => {
+            let body = DefaultResponse::error("get merchant failed", err.to_string()).into_json();
+
+            return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+        }
+    };
+
     let job_schedule = match JobSchedule::create(
         &db,
         "send_invoice",
@@ -355,6 +365,7 @@ pub async fn set_invoice_scheduler(
             "customer_id": invoice.customer_id,
             "customer_name": customer.name,
             "merchant_id": invoice.merchant_id,
+            "merchant_name": merchant.name,
             "amount": invoice.amount,
             "total_amount": invoice.total_amount,
             "tax_amount": invoice.tax_amount,

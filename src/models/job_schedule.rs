@@ -81,7 +81,7 @@ impl JobSchedule {
             JobSchedule,
             r#"
             SELECT * FROM job_schedules
-            WHERE (status = 'scheduled' OR status = 'pending' OR status = 'in_progress') AND run_at <= now()
+            WHERE (status = 'scheduled' OR status = 'in_progress') AND run_at <= now()
             "#
         )
         .fetch_all(db)
@@ -253,5 +253,27 @@ impl JobSchedule {
         .await?;
 
         Ok(job_schedules)
+    }
+
+    pub async fn update_job_data(
+        db: &sqlx::PgPool,
+        id: i32,
+        job_data: &serde_json::Value,
+    ) -> Result<JobSchedule, sqlx::Error> {
+        let job_schedule = sqlx::query_as!(
+            JobSchedule,
+            r#"
+            UPDATE job_schedules
+            SET job_data = $1
+            WHERE id = $2
+            RETURNING *
+            "#,
+            job_data,
+            id
+        )
+        .fetch_one(db)
+        .await?;
+
+        Ok(job_schedule)
     }
 }

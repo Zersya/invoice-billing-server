@@ -28,10 +28,6 @@ pub async fn spawn_job_queue(pool: PgPool, schedule: Schedule) {
                         .await
                         .expect("Failed to get schedule by id");
 
-                JobSchedule::update_status(&pool, job.job_schedule_id.unwrap(), "in_progress")
-                    .await
-                    .expect("Failed to update status");
-
                 if job_schedule.repeat_count.is_some() && job_schedule.repeat_count.unwrap() > 0 {
                     let repeat_count = job_schedule.repeat_count.unwrap();
 
@@ -104,6 +100,14 @@ pub async fn spawn_job_queue(pool: PgPool, schedule: Schedule) {
                                 &pool,
                                 job.job_schedule_id.unwrap(),
                                 "completed",
+                            )
+                            .await
+                            .expect("Failed to update status");
+                        } else {
+                            JobSchedule::update_status(
+                                &pool,
+                                job.job_schedule_id.unwrap(),
+                                "in_progress",
                             )
                             .await
                             .expect("Failed to update status");

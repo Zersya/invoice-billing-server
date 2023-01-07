@@ -492,6 +492,105 @@
     },
     "query": "\n            UPDATE merchants\n            SET name = $1, description = $2\n            WHERE id = $3 AND user_id = $4 AND deleted_at IS NULL\n            RETURNING *\n            "
   },
+  "22fe19b03d44015c52aa501a2fd67ba89b7b47782937d1a6eeaa055f04331975": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "job_type",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "job_data",
+          "ordinal": 2,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "run_at",
+          "ordinal": 3,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "repeat_interval",
+          "ordinal": 4,
+          "type_info": "Int8"
+        },
+        {
+          "name": "repeat_count",
+          "ordinal": 5,
+          "type_info": "Int4"
+        },
+        {
+          "name": "total_repeat_count",
+          "ordinal": 6,
+          "type_info": "Int4"
+        },
+        {
+          "name": "dependencies",
+          "ordinal": 7,
+          "type_info": "Text"
+        },
+        {
+          "name": "status",
+          "ordinal": 8,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "retry_count",
+          "ordinal": 9,
+          "type_info": "Int4"
+        },
+        {
+          "name": "retry_interval",
+          "ordinal": 10,
+          "type_info": "Int4"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 11,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 12,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "deleted_at",
+          "ordinal": 13,
+          "type_info": "Timestamp"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        true,
+        true,
+        false,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Jsonb",
+          "Int4"
+        ]
+      }
+    },
+    "query": "\n            UPDATE job_schedules\n            SET job_data = $1\n            WHERE id = $2\n            RETURNING *\n            "
+  },
   "26e7e05427bc7dabcd7815d27764fda2baf4cfe60a2d2d6ee2a1f773dccbbce2": {
     "describe": {
       "columns": [
@@ -1579,75 +1678,118 @@
     },
     "query": "\n            UPDATE job_queues\n            SET status = $2\n            WHERE id = $1\n            RETURNING *\n            "
   },
-  "85b6f661eae886cf816542f4bccbec3b7701f1acc76b57d4c726d0c516ba5b18": {
+  "7edd8386c9544e567f63dffc71fca242a3b34ef4273b6fcaaabb83db43fa0bd6": {
     "describe": {
       "columns": [
         {
           "name": "id",
           "ordinal": 0,
-          "type_info": "Int4"
+          "type_info": "Uuid"
         },
         {
-          "name": "job_type",
+          "name": "invoice_number",
           "ordinal": 1,
           "type_info": "Varchar"
         },
         {
-          "name": "job_data",
+          "name": "merchant_id",
           "ordinal": 2,
-          "type_info": "Jsonb"
+          "type_info": "Uuid"
         },
         {
-          "name": "job_schedule_id",
+          "name": "customer_id",
           "ordinal": 3,
-          "type_info": "Int4"
+          "type_info": "Uuid"
         },
         {
-          "name": "priority",
+          "name": "amount",
           "ordinal": 4,
           "type_info": "Int4"
         },
         {
-          "name": "status",
+          "name": "total_amount",
           "ordinal": 5,
-          "type_info": "Varchar"
+          "type_info": "Int4"
+        },
+        {
+          "name": "tax_amount",
+          "ordinal": 6,
+          "type_info": "Int4"
+        },
+        {
+          "name": "tax_rate",
+          "ordinal": 7,
+          "type_info": "Int4"
+        },
+        {
+          "name": "invoice_date",
+          "ordinal": 8,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "created_by",
+          "ordinal": 9,
+          "type_info": "Uuid"
         },
         {
           "name": "created_at",
-          "ordinal": 6,
+          "ordinal": 10,
           "type_info": "Timestamp"
         },
         {
           "name": "updated_at",
-          "ordinal": 7,
+          "ordinal": 11,
           "type_info": "Timestamp"
         },
         {
           "name": "deleted_at",
-          "ordinal": 8,
+          "ordinal": 12,
           "type_info": "Timestamp"
+        },
+        {
+          "name": "xendit_invoice_payload",
+          "ordinal": 13,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "title",
+          "ordinal": 14,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "description",
+          "ordinal": 15,
+          "type_info": "Varchar"
         }
       ],
       "nullable": [
         false,
         false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
         true,
         true,
-        false,
-        false,
-        false,
-        false,
+        true,
         true
       ],
       "parameters": {
         "Left": [
-          "Int4"
+          "Timestamp",
+          "Uuid"
         ]
       }
     },
-    "query": "\n            SELECT * FROM job_queues\n            WHERE job_schedule_id = $1 AND status != 'completed'\n            "
+    "query": "\n            UPDATE invoices\n            SET invoice_date = $1\n            WHERE id = $2\n            RETURNING *\n            "
   },
-  "9095d9fc62e82b111b74eb15e00437ebb1527a6f79cbc8ddb7b84d65ff87166d": {
+  "83f72875a963c47b55f5bd1b4a34390eb1ecc44586d13bba694aa0d0978e0992": {
     "describe": {
       "columns": [
         {
@@ -1741,7 +1883,75 @@
         "Left": []
       }
     },
-    "query": "\n            SELECT * FROM job_schedules\n            WHERE (status = 'scheduled' OR status = 'pending' OR status = 'in_progress') AND run_at <= now()\n            "
+    "query": "\n            SELECT * FROM job_schedules\n            WHERE (status = 'scheduled' OR status = 'in_progress') AND run_at <= now()\n            "
+  },
+  "85b6f661eae886cf816542f4bccbec3b7701f1acc76b57d4c726d0c516ba5b18": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "job_type",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "job_data",
+          "ordinal": 2,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "job_schedule_id",
+          "ordinal": 3,
+          "type_info": "Int4"
+        },
+        {
+          "name": "priority",
+          "ordinal": 4,
+          "type_info": "Int4"
+        },
+        {
+          "name": "status",
+          "ordinal": 5,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 6,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 7,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "deleted_at",
+          "ordinal": 8,
+          "type_info": "Timestamp"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      }
+    },
+    "query": "\n            SELECT * FROM job_queues\n            WHERE job_schedule_id = $1 AND status != 'completed'\n            "
   },
   "91ffb01ec372ce3eeb8b196ba20b2e097df105a002df3df51c8e5a2140ac6b83": {
     "describe": {

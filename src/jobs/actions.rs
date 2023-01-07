@@ -72,7 +72,7 @@ pub async fn set_job_schedule_to_queue(pool: PgPool) {
         }
     };
 
-    for job_schedule in job_schedules {
+    for mut job_schedule in job_schedules {
         let job_schedule_id = job_schedule.id;
 
         match JobSchedule::update_status(&pool, job_schedule_id, "pending").await {
@@ -109,6 +109,27 @@ pub async fn set_job_schedule_to_queue(pool: PgPool) {
                     return;
                 }
             };
+
+            // update invoice date to today
+            let invoice_date = Utc::now().naive_utc();
+            match Invoice::update_invoice_date(&pool, &invoice.id, &invoice_date).await {
+                Ok(invoice) => invoice,
+                Err(_) => {
+                    return;
+                }
+            };
+
+            let mut job_data = job_data;
+            job_data["invoice_date"] = Value::String(invoice_date.to_string());
+
+            match JobSchedule::update_job_data(&pool, job_schedule_id, &job_data).await {
+                Ok(_) => (),
+                Err(_) => {
+                    return;
+                }
+            };
+
+            job_schedule.job_data = Some(job_data);
 
             let result = match send_invoice_to_xendit(
                 &invoice.invoice_number,
@@ -176,6 +197,16 @@ pub async fn prepare_invoice_via_channels(
 
     let merchant_id = match job_data["merchant_id"].as_str() {
         Some(merchant_id) => uuid::Uuid::parse_str(merchant_id).unwrap(),
+        None => {
+            return Err(Errors::new(&[(
+                "prepare_invoice",
+                "Failed to prepare invoice",
+            )]));
+        }
+    };
+
+    let merchant_name = match job_data["merchant_name"].as_str() {
+        Some(merchant_name) => merchant_name.to_string(),
         None => {
             return Err(Errors::new(&[(
                 "prepare_invoice",
@@ -257,7 +288,7 @@ pub async fn prepare_invoice_via_channels(
 
     let msg = generate_message();
 
-    // get the {} from the message and replace it with the total_amount, invoice_url, and due_time
+    let msg = msg.replacen("{}", &merchant_name, 1);
     let msg = msg.replacen("{}", &total_amount, 1);
     let msg = msg.replacen("{}", &invoice_url, 1);
     let msg = msg.replacen("{}", &due_time, 1);
@@ -284,16 +315,16 @@ pub async fn prepare_invoice_via_channels(
 // return random message from vector
 fn generate_message() -> String {
     let messages = [
-        "As a reminder, we ask that you please make a payment of *{}* to avoid any late fees. The payment can be made at the following link: {}. The due date for this payment is {}.",
-        "To avoid incurring late fees, we request that you make a payment of *{}* as soon as possible. You can easily do so by following this payment link: {}. The deadline for this payment is {}.",
-        "We strongly encourage you to make a payment of *{}* by the due date of {} to avoid late fees. You can make the payment by clicking on the following link: {}.",
-        "To avoid being charged late fees, we request that you make a payment of *{}* by {}. You can access the payment link here: {}.",
-        "Please make a payment of *{}* by the due date of {} to avoid late fees. You can make the payment at the following link: {}.",
-        "We request that you make a payment of *{}* as soon as possible to avoid any late fees. The payment link can be found here: {}. Please note that the payment is due on {}.",
-        "To avoid late fees, we ask that you make a payment of *{}* by the due date of {}. You can make the payment using the following link: {}.",
-        "As a reminder, a payment of *{}* is due on {} to avoid late fees. You can make the payment at the following link: {}.",
-        "We request that you make a payment of *{}* by {} to avoid any late fees. The payment link is available here: {}.",
-        "To avoid being charged late fees, we ask that you make a payment of *{}* as soon as possible. The payment link is provided here: {}. Please note that the payment is due on {}.",
+        "{} here, as a reminder, we ask that you please make a payment of *{}* to avoid any late fees. The payment can be made at the following link: {}. The due date for this payment is {}.",
+        "{} here, to avoid incurring late fees, we request that you make a payment of *{}* as soon as possible. You can easily do so by following this payment link: {}. The deadline for this payment is {}.",
+        "{} here, we strongly encourage you to make a payment of *{}* by the due date of {} to avoid late fees. You can make the payment by clicking on the following link: {}.",
+        "{} here, to avoid being charged late fees, we request that you make a payment of *{}* by {}. You can access the payment link here: {}.",
+        "{} here, please make a payment of *{}* by the due date of {} to avoid late fees. You can make the payment at the following link: {}.",
+        "{} here, we request that you make a payment of *{}* as soon as possible to avoid any late fees. The payment link can be found here: {}. Please note that the payment is due on {}.",
+        "{} here, to avoid late fees, we ask that you make a payment of *{}* by the due date of {}. You can make the payment using the following link: {}.",
+        "{} here, as a reminder, a payment of *{}* is due on {} to avoid late fees. You can make the payment at the following link: {}.",
+        "{} here, we request that you make a payment of *{}* by {} to avoid any late fees. The payment link is available here: {}.",
+        "{} here, to avoid being charged late fees, we ask that you make a payment of *{}* as soon as possible. The payment link is provided here: {}. Please note that the payment is due on {}.",
     ];
 
     let random_number = rand::thread_rng().gen_range(0..10);
