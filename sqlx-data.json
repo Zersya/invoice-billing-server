@@ -823,6 +823,72 @@
     },
     "query": "\n            SELECT *\n            FROM oauth_access_tokens\n            WHERE access_token = $1 AND revoked_at IS NULL AND expires_at > $2\n            "
   },
+  "46aef3ee78b890a227e0c8f4ae3e6b8a463d258f2cc4a34b1d156ce9ba2ecece": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "job_type",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "job_data",
+          "ordinal": 2,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "job_schedule_id",
+          "ordinal": 3,
+          "type_info": "Int4"
+        },
+        {
+          "name": "priority",
+          "ordinal": 4,
+          "type_info": "Int4"
+        },
+        {
+          "name": "status",
+          "ordinal": 5,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 6,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 7,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "deleted_at",
+          "ordinal": 8,
+          "type_info": "Timestamp"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "\n            SELECT * FROM job_queues\n            WHERE status = 'pending' OR status = 'failed'\n            ORDER BY priority ASC, created_at ASC\n            LIMIT 1\n            "
+  },
   "47406dff372f4b4b718077e3f0cd4052f7f3da70296d596dca098db48baed32a": {
     "describe": {
       "columns": [
@@ -3152,72 +3218,6 @@
       }
     },
     "query": "\n            INSERT INTO oauth_access_tokens (access_token, user_id, expires_at)\n            VALUES ($1, $2, $3)\n            RETURNING *\n            "
-  },
-  "ecb7719fc023e4299993d4a026491d788b30a5c5bc627982469840471a277339": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Int4"
-        },
-        {
-          "name": "job_type",
-          "ordinal": 1,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "job_data",
-          "ordinal": 2,
-          "type_info": "Jsonb"
-        },
-        {
-          "name": "job_schedule_id",
-          "ordinal": 3,
-          "type_info": "Int4"
-        },
-        {
-          "name": "priority",
-          "ordinal": 4,
-          "type_info": "Int4"
-        },
-        {
-          "name": "status",
-          "ordinal": 5,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "created_at",
-          "ordinal": 6,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "updated_at",
-          "ordinal": 7,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "deleted_at",
-          "ordinal": 8,
-          "type_info": "Timestamp"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        true,
-        true,
-        false,
-        false,
-        false,
-        false,
-        true
-      ],
-      "parameters": {
-        "Left": []
-      }
-    },
-    "query": "\n            SELECT * FROM job_queues\n            WHERE status = 'pending' OR status = 'failed' OR status = 'in_progress'\n            ORDER BY priority ASC, created_at ASC\n            LIMIT 1\n            "
   },
   "f162ae88463790baa2ab375899953defab569e5d1323428517bb0fd12b197183": {
     "describe": {

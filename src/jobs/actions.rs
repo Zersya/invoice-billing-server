@@ -3,6 +3,7 @@ use std::ops::Add;
 use axum::http::HeaderValue;
 use chrono::{Duration, Utc};
 use cron::Schedule;
+use rand::Rng;
 use serde_json::Value;
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -237,32 +238,33 @@ pub async fn prepare_invoice_via_channels(
     let xendit_invoice_payload = invoice.xendit_invoice_payload.unwrap();
     let invoice_url = xendit_invoice_payload["invoice_url"].as_str().unwrap();
 
-//    let job_schedule =
-//        match JobSchedule::get_by_job_data_json_by_invoice_id(&pool, &invoice.id.to_string().as_str()).await {
-//            Ok(job_schedule) => job_schedule,
-//            Err(_) => {
-//                return Err(Errors::new(&[(
-//                    "prepare_invoice",
-//                    "Failed to prepare invoice",
-//                )]));
-//            }
-//        };
+    //    let job_schedule =
+    //        match JobSchedule::get_by_job_data_json_by_invoice_id(&pool, &invoice.id.to_string().as_str()).await {
+    //            Ok(job_schedule) => job_schedule,
+    //            Err(_) => {
+    //                return Err(Errors::new(&[(
+    //                    "prepare_invoice",
+    //                    "Failed to prepare invoice",
+    //                )]));
+    //            }
+    //        };
 
     let now = Utc::now();
     let due_time = &now.add(Duration::hours(24));
     let due_time = format!("{}", due_time.format("%d/%m/%Y - %H:%M"));
-    
+
     let total_amount = format!("Rp{:.2}", total_amount);
+
+    let msg = generate_message();
+
+    // get the {} from the message and replace it with the total_amount, invoice_url, and due_time
+    let msg = msg.replacen("{}", &total_amount, 1);
+    let msg = msg.replacen("{}", &invoice_url, 1);
+    let msg = msg.replacen("{}", &due_time, 1);
 
     match whatsapp_send_message(
         whatsapp_contact_channel.value.as_str(),
-        format!(
-            "Please make a payment of *{}* to avoid incurring late fees. The *payment link* is {} and the *due date* is {}.",
-            total_amount,
-            invoice_url,
-            due_time
-        )
-        .as_str(),
+        msg.as_str(),
         &schedule,
     )
     .await
@@ -275,4 +277,25 @@ pub async fn prepare_invoice_via_channels(
             )]));
         }
     }
+}
+
+// generate constant vector of messages
+// generate random number between 0 to 9
+// return random message from vector
+fn generate_message() -> String {
+    let messages = [
+        "As a reminder, we ask that you please make a payment of *{}* to avoid any late fees. The payment can be made at the following link: {}. The due date for this payment is {}.",
+        "To avoid incurring late fees, we request that you make a payment of *{}* as soon as possible. You can easily do so by following this payment link: {}. The deadline for this payment is {}.",
+        "We strongly encourage you to make a payment of *{}* by the due date of {} to avoid late fees. You can make the payment by clicking on the following link: {}.",
+        "To avoid being charged late fees, we request that you make a payment of *{}* by {}. You can access the payment link here: {}.",
+        "Please make a payment of *{}* by the due date of {} to avoid late fees. You can make the payment at the following link: {}.",
+        "We request that you make a payment of *{}* as soon as possible to avoid any late fees. The payment link can be found here: {}. Please note that the payment is due on {}.",
+        "To avoid late fees, we ask that you make a payment of *{}* by the due date of {}. You can make the payment using the following link: {}.",
+        "As a reminder, a payment of *{}* is due on {} to avoid late fees. You can make the payment at the following link: {}.",
+        "We request that you make a payment of *{}* by {} to avoid any late fees. The payment link is available here: {}.",
+        "To avoid being charged late fees, we ask that you make a payment of *{}* as soon as possible. The payment link is provided here: {}. Please note that the payment is due on {}.",
+    ];
+
+    let random_number = rand::thread_rng().gen_range(0..10);
+    messages[random_number].to_string()
 }

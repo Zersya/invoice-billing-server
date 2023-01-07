@@ -29,6 +29,7 @@ tower = "0.4.13"
 tower-layer = "0.3.2"
 tower-http = { version= "0.3.5", features = ["cors"] }
 cron = "0.12.0"
+rand = "0.8.5"
 
 [profile.dev.package.sqlx-macros]
 opt-level = 3

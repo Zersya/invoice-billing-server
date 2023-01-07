@@ -802,6 +802,7 @@ dependencies = [
  "crypto-hash",
  "dotenvy",
  "itoa",
+ "rand",
  "reqwest",
  "rust-argon2",
  "rust_decimal",

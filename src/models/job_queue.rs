@@ -93,7 +93,7 @@ impl JobQueue {
             JobQueue,
             r#"
             SELECT * FROM job_queues
-            WHERE status = 'pending' OR status = 'failed' OR status = 'in_progress'
+            WHERE status = 'pending' OR status = 'failed'
             ORDER BY priority ASC, created_at ASC
             LIMIT 1
             "#,
