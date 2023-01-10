@@ -100,6 +100,10 @@ pub async fn axum() {
             get(handlers::customer::get_by_merchant_id).post(handlers::customer::create),
         )
         .route(
+            "/merchant/:id/set-schedule",
+            put(handlers::job_schedule::set_scheduler),
+        )
+        .route(
             "/merchant/:id/scheduled-job",
             get(handlers::merchant::get_job_schedule_by_merchant_id),
         )

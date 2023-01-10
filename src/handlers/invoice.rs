@@ -190,18 +190,15 @@ pub async fn set_invoice_status(
     {
         Ok(_) => (),
         Err(err) => {
-            let body = DefaultResponse::error(
-                "no job queue with related invoice found",
-                err.to_string(),
-            )
-            .into_json();
+            let body =
+                DefaultResponse::error("no job queue with related invoice found", err.to_string())
+                    .into_json();
 
             return (StatusCode::NOT_FOUND, body).into_response();
         }
     }
 
-    let body = DefaultResponse::ok("update job status success")
-        .into_json();
+    let body = DefaultResponse::ok("update job status success").into_json();
 
     (StatusCode::OK, body).into_response()
 }
@@ -231,13 +228,18 @@ pub async fn set_invoice_scheduler(
         return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
     }
 
-    match JobSchedule::get_by_job_data_json_by_invoice_id(&db, invoice_id.to_string().as_str()).await {
+    match JobSchedule::get_by_job_data_json_by_invoice_id(&db, invoice_id.to_string().as_str())
+        .await
+    {
         Ok(_) => {
-            let body =
-                DefaultResponse::error("Invoice is scheduled", "Found job schedule for invoice".to_string()).into_json();
+            let body = DefaultResponse::error(
+                "Invoice is scheduled",
+                "Found job schedule for invoice".to_string(),
+            )
+            .into_json();
             return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
-        },
-        Err(_) => ()
+        }
+        Err(_) => (),
     };
 
     let now = chrono::Utc::now();
