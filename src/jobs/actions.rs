@@ -99,57 +99,20 @@ pub async fn set_job_schedule_to_queue(pool: PgPool) {
         }
 
         if job_schedule.job_type == "send_invoice" {
-            let job_data = job_schedule.job_data.clone().unwrap();
-            let invoice_id = job_data["invoice_id"].as_str().unwrap();
-            let invoice_id = Uuid::parse_str(invoice_id).unwrap();
-
-            let invoice = match Invoice::get_by_id(&pool, &invoice_id).await {
-                Ok(invoice) => invoice,
-                Err(_) => {
+            let job_data = match job_schedule.job_data {
+                Some(job_data) => job_data,
+                None => {
                     return;
                 }
             };
 
-            // update invoice date to today
-            let invoice_date = Utc::now().naive_utc();
-            match Invoice::update_invoice_date(&pool, &invoice.id, &invoice_date).await {
-                Ok(invoice) => invoice,
-                Err(_) => {
-                    return;
-                }
-            };
-
-            let mut job_data = job_data;
-            job_data["invoice_date"] = Value::String(invoice_date.to_string());
-
-            match JobSchedule::update_job_data(&pool, job_schedule_id, &job_data).await {
-                Ok(_) => (),
-                Err(_) => {
-                    return;
-                }
-            };
-
-            job_schedule.job_data = Some(job_data);
-
-            let result = match send_invoice_to_xendit(
-                &invoice.invoice_number,
-                &invoice.total_amount,
-                &invoice.to_string(),
-            )
-            .await
-            {
-                Ok(payload) => payload,
-                Err(_) => {
-                    return;
-                }
-            };
-
-            match Invoice::update_xendit_invoice_payload(&pool, &invoice.id, &result).await {
-                Ok(invoice) => invoice,
-                Err(_) => {
-                    return;
-                }
-            };
+            job_schedule.job_data =
+                match set_job_schedule_send_invoice(&pool, job_data, job_schedule_id).await {
+                    Ok(job_data) => Some(job_data),
+                    Err(_) => {
+                        return;
+                    }
+                };
         }
 
         match JobQueue::create(
@@ -170,17 +133,17 @@ pub async fn set_job_schedule_to_queue(pool: PgPool) {
     }
 }
 
-pub async fn prepare_invoice_via_channels(
+pub async fn prepare_via_channels(
     pool: &PgPool,
-    job_data: Value,
+    job_schedule: &JobSchedule,
     schedule: &Schedule,
 ) -> Result<(), Errors> {
-    let invoice_id = match job_data["invoice_id"].as_str() {
-        Some(invoice_id) => uuid::Uuid::parse_str(invoice_id).unwrap(),
+    let job_data = match &job_schedule.job_data {
+        Some(job_data) => job_data,
         None => {
             return Err(Errors::new(&[(
-                "prepare_invoice",
-                "Failed to prepare invoice",
+                "prepare_via_channels",
+                "unable to get job data",
             )]));
         }
     };
@@ -189,7 +152,7 @@ pub async fn prepare_invoice_via_channels(
         Some(phone_number) => uuid::Uuid::parse_str(phone_number).unwrap(),
         None => {
             return Err(Errors::new(&[(
-                "prepare_invoice",
+                "prepare_via_channels",
                 "Failed to prepare invoice",
             )]));
         }
@@ -199,7 +162,7 @@ pub async fn prepare_invoice_via_channels(
         Some(merchant_id) => uuid::Uuid::parse_str(merchant_id).unwrap(),
         None => {
             return Err(Errors::new(&[(
-                "prepare_invoice",
+                "prepare_via_channels",
                 "Failed to prepare invoice",
             )]));
         }
@@ -209,17 +172,7 @@ pub async fn prepare_invoice_via_channels(
         Some(merchant_name) => merchant_name.to_string(),
         None => {
             return Err(Errors::new(&[(
-                "prepare_invoice",
-                "Failed to prepare invoice",
-            )]));
-        }
-    };
-
-    let total_amount = match job_data["total_amount"].as_i64() {
-        Some(total_amount) => total_amount,
-        None => {
-            return Err(Errors::new(&[(
-                "prepare_invoice",
+                "prepare_via_channels",
                 "Failed to prepare invoice",
             )]));
         }
@@ -236,7 +189,7 @@ pub async fn prepare_invoice_via_channels(
             Ok(customer_contact_channels) => customer_contact_channels,
             Err(_) => {
                 return Err(Errors::new(&[(
-                    "prepare_invoice",
+                    "prepare_via_channels",
                     "Failed to prepare invoice",
                 )]));
             }
@@ -250,62 +203,45 @@ pub async fn prepare_invoice_via_channels(
         Some(whatsapp_contact_channel) => whatsapp_contact_channel,
         None => {
             return Err(Errors::new(&[(
-                "prepare_invoice",
+                "prepare_via_channels",
                 "Failed to prepare invoice",
             )]));
         }
     };
+    let mut message = String::new();
 
-    let invoice = match Invoice::get_by_id(&pool, &invoice_id).await {
-        Ok(invoice) => invoice,
-        Err(_) => {
-            return Err(Errors::new(&[(
-                "prepare_invoice",
-                "Failed to prepare invoice",
-            )]));
-        }
+    if job_schedule.job_type == "send_invoice" {
+        message = match message_builder_invoice(&pool, job_data.clone(), &merchant_name).await {
+            Ok(message) => message,
+            Err(_) => {
+                return Err(Errors::new(&[(
+                    "prepare_via_channels",
+                    "Failed to prepare invoice",
+                )]));
+            }
+        };
+    } else if job_schedule.job_type == "send_reminder" {
+        message = match message_builder_reminder(job_data.clone(), &merchant_name) {
+            Ok(message) => message,
+            Err(_) => {
+                return Err(Errors::new(&[(
+                    "prepare_via_channels",
+                    "Failed to prepare reminder",
+                )]));
+            }
+        };
     };
-
-    let xendit_invoice_payload = invoice.xendit_invoice_payload.unwrap();
-    let invoice_url = xendit_invoice_payload["invoice_url"].as_str().unwrap();
-
-    //    let job_schedule =
-    //        match JobSchedule::get_by_job_data_json_by_invoice_id(&pool, &invoice.id.to_string().as_str()).await {
-    //            Ok(job_schedule) => job_schedule,
-    //            Err(_) => {
-    //                return Err(Errors::new(&[(
-    //                    "prepare_invoice",
-    //                    "Failed to prepare invoice",
-    //                )]));
-    //            }
-    //        };
-
-    let now = Utc::now();
-    let due_time = &now.add(Duration::hours(24));
-    let due_time = format!("{}", due_time.format("%d/%m/%Y - %H:%M"));
-
-    let total_amount = format!("Rp{:.2}", total_amount);
-
-    let msg = generate_message();
-
-    let msg = msg.replacen("{}", &merchant_name, 1);
-    let msg = msg.replacen("{}", &total_amount, 1);
-    let msg = msg.replacen("{}", &invoice_url, 1);
-    let msg = msg.replacen("{}", &due_time, 1);
 
     match whatsapp_send_message(
         whatsapp_contact_channel.value.as_str(),
-        msg.as_str(),
+        message.as_str(),
         &schedule,
     )
     .await
     {
         Ok(_) => Ok(()),
         Err(_) => {
-            return Err(Errors::new(&[(
-                "prepare_invoice",
-                "Failed to prepare invoice",
-            )]));
+            return Err(Errors::new(&[("prepare_via_channels", "Failed to send message")]));
         }
     }
 }
@@ -329,4 +265,161 @@ fn generate_message() -> String {
 
     let random_number = rand::thread_rng().gen_range(0..10);
     messages[random_number].to_string()
+}
+
+async fn set_job_schedule_send_invoice(
+    pool: &PgPool,
+    job_data: Value,
+    job_schedule_id: i32,
+) -> Result<Value, Errors> {
+    let invoice_id = job_data["invoice_id"].as_str().unwrap();
+    let invoice_id = Uuid::parse_str(invoice_id).unwrap();
+
+    let invoice = match Invoice::get_by_id(&pool, &invoice_id).await {
+        Ok(invoice) => invoice,
+        Err(_) => {
+            return Err(Errors::new(&[("setup_invoice", "Failed to get invoice")]));
+        }
+    };
+
+    // update invoice date to today
+    let invoice_date = Utc::now().naive_utc();
+    match Invoice::update_invoice_date(&pool, &invoice.id, &invoice_date).await {
+        Ok(invoice) => invoice,
+        Err(_) => {
+            return Err(Errors::new(&[(
+                "setup_invoice",
+                "Failed to update invoice date",
+            )]));
+        }
+    };
+
+    let mut job_data = job_data;
+    job_data["invoice_date"] = Value::String(invoice_date.to_string());
+
+    match JobSchedule::update_job_data(&pool, job_schedule_id, &job_data).await {
+        Ok(_) => (),
+        Err(_) => {
+            return Err(Errors::new(&[(
+                "setup_invoice",
+                "Failed to update job data",
+            )]));
+        }
+    };
+
+    let result = match send_invoice_to_xendit(
+        &invoice.invoice_number,
+        &invoice.total_amount,
+        &invoice.to_string(),
+    )
+    .await
+    {
+        Ok(payload) => payload,
+        Err(_) => {
+            return Err(Errors::new(&[(
+                "setup_invoice",
+                "Failed to send invoice to xendit",
+            )]));
+        }
+    };
+
+    match Invoice::update_xendit_invoice_payload(&pool, &invoice.id, &result).await {
+        Ok(invoice) => invoice,
+        Err(_) => {
+            return Err(Errors::new(&[(
+                "setup_invoice",
+                "Failed to update xendit invoice payload",
+            )]));
+        }
+    };
+
+    Ok(job_data)
+}
+
+async fn message_builder_invoice(
+    pool: &PgPool,
+    job_data: Value,
+    merchant_name: &str,
+) -> Result<String, Errors> {
+    let invoice_id = match job_data["invoice_id"].as_str() {
+        Some(invoice_id) => uuid::Uuid::parse_str(invoice_id).unwrap(),
+        None => {
+            return Err(Errors::new(&[(
+                "message_builder_invoice",
+                "Failed to prepare invoice",
+            )]));
+        }
+    };
+
+    let invoice = match Invoice::get_by_id(&pool, &invoice_id).await {
+        Ok(invoice) => invoice,
+        Err(_) => {
+            return Err(Errors::new(&[(
+                "message_builder_invoice",
+                "Failed to prepare invoice",
+            )]));
+        }
+    };
+
+    let total_amount = match job_data["total_amount"].as_i64() {
+        Some(total_amount) => total_amount,
+        None => {
+            return Err(Errors::new(&[(
+                "message_builder_invoice",
+                "Failed to prepare invoice",
+            )]));
+        }
+    };
+
+    let xendit_invoice_payload = invoice.xendit_invoice_payload.unwrap();
+    let invoice_url = xendit_invoice_payload["invoice_url"].as_str().unwrap();
+
+    let now = Utc::now();
+    let due_time = &now.add(Duration::hours(24));
+    let due_time = format!("{}", due_time.format("%d/%m/%Y - %H:%M"));
+
+    let total_amount = format!("Rp{:.2}", total_amount);
+
+    let msg = generate_message();
+
+    let msg = msg.replacen("{}", &merchant_name, 1);
+    let msg = msg.replacen("{}", &total_amount, 1);
+    let msg = msg.replacen("{}", &invoice_url, 1);
+    let msg = msg.replacen("{}", &due_time, 1);
+
+    Ok(msg)
+}
+
+fn message_builder_reminder(
+    job_data: Value,
+    merchant_name: &str,
+) -> Result<String, Errors> {
+    
+    let title = match job_data["title"].as_str() {
+        Some(title) => title,
+        None => {
+            return Err(Errors::new(&[(
+                "message_builder_reminder",
+                "Failed to prepare reminder",
+            )]));
+        }
+    };
+
+    let description = match job_data["description"].as_str() {
+        Some(description) => description,
+        None => {
+            return Err(Errors::new(&[(
+                "message_builder_reminder",
+                "Failed to prepare reminder",
+            )]));
+        }
+    };
+
+    let msg = "{} here, we have a message for you \"{}\", \"{}\".".to_string();
+
+    let msg = msg.replacen("{}", &merchant_name, 1);
+    let msg = msg.replacen("{}", &title, 1);
+    let msg = msg.replacen("{}", &description, 1);
+
+    Ok(msg)
 }
