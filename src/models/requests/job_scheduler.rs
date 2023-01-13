@@ -11,6 +11,8 @@ pub struct RequestSchedule {
     pub job_type: String,
     pub external_id: Uuid,
     pub is_recurring: bool,
+    pub title: Option<String>,
+    pub description: Option<String>,
     #[validate(custom = "validate_repeat_interval_type")]
     pub repeat_interval_type: Option<String>,
     #[serde(with = "default_date_format")]

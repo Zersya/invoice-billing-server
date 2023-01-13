@@ -130,7 +130,7 @@ pub async fn set_scheduler(
         (end_at - start_at).num_seconds() / repeat_interval
     };
 
-    let mut job_schedule = None;
+    let mut job_schedule: Option<JobSchedule> = None;
 
     if body.job_type == "send_invoice" {
         job_schedule = match set_invoice_job_schedule(
@@ -152,6 +152,27 @@ pub async fn set_scheduler(
             }
         };
     } else if body.job_type == "send_reminder" {
+
+        if body.title.is_none() || body.title.as_ref().unwrap().is_empty() {
+            let body = DefaultResponse::error(
+                "title is required for send_reminder job",
+                body.external_id.to_string(),
+            )
+            .into_json();
+
+            return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+        }
+
+        if body.description.is_none() || body.description.as_ref().unwrap().is_empty() {
+            let body = DefaultResponse::error(
+                "description is required for send_reminder job",
+                body.external_id.to_string(),
+            )
+            .into_json();
+
+            return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+        }
+
         job_schedule = match set_reminder_job_schedule(
             &db,
             &user_id,
@@ -160,6 +181,8 @@ pub async fn set_scheduler(
             &start_at,
             &repeat_interval,
             &repeat_count,
+            &body.title.unwrap(),
+            &body.description.unwrap(),
         )
         .await
         {
@@ -262,6 +285,8 @@ async fn set_reminder_job_schedule(
     start_at: &chrono::NaiveDateTime,
     repeat_interval: &i64,
     repeat_count: &i64,
+    title: &str,
+    description: &str,
 ) -> Result<JobSchedule, Json<serde_json::Value>> {
     let customer = match Customer::get_by_id(&db, *external_id, &merchant_id).await {
         Ok(customer) => customer,
@@ -281,8 +306,8 @@ async fn set_reminder_job_schedule(
         &db,
         "send_reminder",
         Some(json!({
-            "title": "Reminder",
-            "description": "Reminder Desc",
+            "title": title,
+            "description": description,
             "customer_id": external_id,
             "customer_name": customer.name,
             "merchant_id": merchant_id,
