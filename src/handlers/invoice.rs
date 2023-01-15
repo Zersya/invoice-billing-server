@@ -189,12 +189,12 @@ pub async fn set_invoice_status(
     .await
     {
         Ok(_) => (),
-        Err(err) => {
+        Err(_) => {
             let body =
-                DefaultResponse::error("no job queue with related invoice found", err.to_string())
+                DefaultResponse::ok("update job status success with running job has been canceled")
                     .into_json();
 
-            return (StatusCode::NOT_FOUND, body).into_response();
+            return (StatusCode::OK, body).into_response();
         }
     }
 
