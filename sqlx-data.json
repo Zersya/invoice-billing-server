@@ -1311,65 +1311,6 @@
     },
     "query": "\n            UPDATE job_schedules\n            SET run_at = $1\n            WHERE id = $2\n            RETURNING *\n            "
   },
-  "5cfb27a9edca20b10943fd98a4694b9e35ef9414950d93607cc27ff935914036": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "name",
-          "ordinal": 1,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "merchant_id",
-          "ordinal": 2,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "created_at",
-          "ordinal": 3,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "updated_at",
-          "ordinal": 4,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "deleted_at",
-          "ordinal": 5,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "tags",
-          "ordinal": 6,
-          "type_info": "TextArray"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Varchar",
-          "TextArray",
-          "Uuid",
-          "Uuid"
-        ]
-      }
-    },
-    "query": "\n            UPDATE customers\n            SET name = $1, tags = $2\n            WHERE id = $3 AND merchant_id = $4 AND deleted_at IS NULL\n            RETURNING *\n            "
-  },
   "5e4d32884a49f73022da9d3253975c9e4617d23af749a5d036fcf540ab1b2c5c": {
     "describe": {
       "columns": [
@@ -2109,6 +2050,65 @@
       }
     },
     "query": "\n            UPDATE job_schedules\n            SET status = $1\n            WHERE job_data->>'invoice_id' = $2 AND job_data->>'created_by' = $3\n            RETURNING *\n            "
+  },
+  "92c680206a50201c0948cc88106f61039107d4265fcd0f8a2f1aedd64fc3d72d": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "name",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "merchant_id",
+          "ordinal": 2,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 3,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 4,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "deleted_at",
+          "ordinal": 5,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "tags",
+          "ordinal": 6,
+          "type_info": "TextArray"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "TextArray",
+          "Uuid",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            UPDATE customers\n            SET name = $1, tags = $2, updated_at = NOW()\n            WHERE id = $3 AND merchant_id = $4 AND deleted_at IS NULL\n            RETURNING *\n            "
   },
   "9625617d376d70f9840e7b9d56613e5de64f0416dad9ab3c013ca52f6482f694": {
     "describe": {

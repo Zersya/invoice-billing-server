@@ -85,7 +85,7 @@ impl Customer {
             Customer,
             r#"
             UPDATE customers
-            SET name = $1, tags = $2
+            SET name = $1, tags = $2, updated_at = NOW()
             WHERE id = $3 AND merchant_id = $4 AND deleted_at IS NULL
             RETURNING *
             "#,
