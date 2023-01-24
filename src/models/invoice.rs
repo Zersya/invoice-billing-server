@@ -160,8 +160,8 @@ impl Invoice {
                 INNER JOIN users ON users.id = merchants.user_id
                 INNER JOIN customers ON customers.id = invoices.customer_id
                 LEFT JOIN job_schedules ON job_schedules.job_data->>'invoice_id' = invoices.id::text
-            WHERE users.id = $1 AND invoices.deleted_at IS NULL AND customers.deleted_at IS NULL AND invoices.created_at > NOW() - INTERVAL '2 month'
-            ORDER BY invoices.created_at DESC
+            WHERE users.id = $1 AND invoices.deleted_at IS NULL AND customers.deleted_at IS NULL AND invoices.invoice_date > NOW() - INTERVAL '2 month'
+            ORDER BY invoices.invoice_date DESC
             "#,
             user_id
         )
@@ -192,8 +192,8 @@ impl Invoice {
             FROM invoices
                 INNER JOIN customers ON customers.id = invoices.customer_id
                 LEFT JOIN job_schedules ON job_schedules.job_data->>'invoice_id' = invoices.id::text
-            WHERE invoices.merchant_id = $1 AND invoices.deleted_at IS NULL AND customers.deleted_at IS NULL AND invoices.created_at > NOW() - INTERVAL '2 month'
-            ORDER BY invoices.created_at DESC
+            WHERE invoices.merchant_id = $1 AND invoices.deleted_at IS NULL AND customers.deleted_at IS NULL AND invoices.invoice_date > NOW() - INTERVAL '2 month'
+            ORDER BY invoices.invoice_date DESC
             "#,
             merchant_id
         )
