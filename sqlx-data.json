@@ -1,79 +1,5 @@
 {
   "db": "PostgreSQL",
-  "08bb1c4835e0abf57fafd3ecb0acd04748f253216cf03326402bd4a525ab52ce": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "invoice_number",
-          "ordinal": 1,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "customer_id",
-          "ordinal": 2,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "customer_name",
-          "ordinal": 3,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "total_amount",
-          "ordinal": 4,
-          "type_info": "Int4"
-        },
-        {
-          "name": "invoice_date",
-          "ordinal": 5,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "created_at",
-          "ordinal": 6,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "job_schedule",
-          "ordinal": 7,
-          "type_info": "Json"
-        },
-        {
-          "name": "title",
-          "ordinal": 8,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "description",
-          "ordinal": 9,
-          "type_info": "Varchar"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        null,
-        true,
-        true
-      ],
-      "parameters": {
-        "Left": [
-          "Uuid"
-        ]
-      }
-    },
-    "query": "\n            SELECT \n                invoices.id, \n                invoices.invoice_number, \n                invoices.customer_id, \n                customers.name as customer_name, \n                invoices.total_amount, \n                invoices.invoice_date, \n                invoices.created_at, \n                row_to_json(job_schedules) as job_schedule,\n                invoices.title,\n                invoices.description \n            FROM invoices\n                INNER JOIN merchants ON merchants.id = invoices.merchant_id\n                INNER JOIN users ON users.id = merchants.user_id\n                INNER JOIN customers ON customers.id = invoices.customer_id\n                LEFT JOIN job_schedules ON job_schedules.job_data->>'invoice_id' = invoices.id::text\n            WHERE users.id = $1\n            ORDER BY invoices.created_at DESC\n            "
-  },
   "0afcfb382f5541cd6da152a884e48d34be9aa3e3ab93210fab5f37b44c86de63": {
     "describe": {
       "columns": [
@@ -1430,6 +1356,80 @@
     },
     "query": "\n            INSERT INTO invoices (customer_id, merchant_id, amount, total_amount, tax_amount, tax_rate, invoice_date, created_by, title, description)\n            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)\n            RETURNING *\n            "
   },
+  "7110600bed4940607388868f91606ec6a570b565524b500deb5306c2059a396d": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "invoice_number",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "customer_id",
+          "ordinal": 2,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "customer_name",
+          "ordinal": 3,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "total_amount",
+          "ordinal": 4,
+          "type_info": "Int4"
+        },
+        {
+          "name": "invoice_date",
+          "ordinal": 5,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 6,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "job_schedule",
+          "ordinal": 7,
+          "type_info": "Json"
+        },
+        {
+          "name": "title",
+          "ordinal": 8,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "description",
+          "ordinal": 9,
+          "type_info": "Varchar"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        null,
+        true,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            SELECT \n                invoices.id, \n                invoices.invoice_number, \n                invoices.customer_id, \n                customers.name as customer_name, \n                invoices.total_amount, \n                invoices.invoice_date, \n                invoices.created_at, \n                row_to_json(job_schedules) as job_schedule,\n                invoices.title,\n                invoices.description\n            FROM invoices\n                INNER JOIN customers ON customers.id = invoices.customer_id\n                LEFT JOIN job_schedules ON job_schedules.job_data->>'invoice_id' = invoices.id::text\n            WHERE invoices.merchant_id = $1 AND invoices.deleted_at IS NULL AND customers.deleted_at IS NULL AND invoices.created_at > NOW() - INTERVAL '2 month'\n            ORDER BY invoices.created_at DESC\n            "
+  },
   "744490a2f29cc7b33b75f903a1ceda3809bdc0ad6a2f215489f8474235ed2afc": {
     "describe": {
       "columns": [
@@ -2109,80 +2109,6 @@
       }
     },
     "query": "\n            UPDATE customers\n            SET name = $1, tags = $2, updated_at = NOW()\n            WHERE id = $3 AND merchant_id = $4 AND deleted_at IS NULL\n            RETURNING *\n            "
-  },
-  "9625617d376d70f9840e7b9d56613e5de64f0416dad9ab3c013ca52f6482f694": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "invoice_number",
-          "ordinal": 1,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "customer_id",
-          "ordinal": 2,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "customer_name",
-          "ordinal": 3,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "total_amount",
-          "ordinal": 4,
-          "type_info": "Int4"
-        },
-        {
-          "name": "invoice_date",
-          "ordinal": 5,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "created_at",
-          "ordinal": 6,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "job_schedule",
-          "ordinal": 7,
-          "type_info": "Json"
-        },
-        {
-          "name": "title",
-          "ordinal": 8,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "description",
-          "ordinal": 9,
-          "type_info": "Varchar"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        null,
-        true,
-        true
-      ],
-      "parameters": {
-        "Left": [
-          "Uuid"
-        ]
-      }
-    },
-    "query": "\n            SELECT \n                invoices.id, \n                invoices.invoice_number, \n                invoices.customer_id, \n                customers.name as customer_name, \n                invoices.total_amount, \n                invoices.invoice_date, \n                invoices.created_at, \n                row_to_json(job_schedules) as job_schedule,\n                invoices.title,\n                invoices.description\n            FROM invoices\n                INNER JOIN customers ON customers.id = invoices.customer_id\n                LEFT JOIN job_schedules ON job_schedules.job_data->>'invoice_id' = invoices.id::text\n            WHERE invoices.merchant_id = $1\n            ORDER BY invoices.created_at DESC\n            "
   },
   "9dcec2972fb153eb17aee69407b29b64a6825a28c596ae2d8ebd21803ab6b930": {
     "describe": {
@@ -3428,6 +3354,80 @@
       }
     },
     "query": "\n            INSERT INTO oauth_access_tokens (access_token, user_id, expires_at)\n            VALUES ($1, $2, $3)\n            RETURNING *\n            "
+  },
+  "ee6ca09ce4ea0d77331b392f5d0860c6cc431a2decebf10f7460714f709e15fd": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "invoice_number",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "customer_id",
+          "ordinal": 2,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "customer_name",
+          "ordinal": 3,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "total_amount",
+          "ordinal": 4,
+          "type_info": "Int4"
+        },
+        {
+          "name": "invoice_date",
+          "ordinal": 5,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 6,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "job_schedule",
+          "ordinal": 7,
+          "type_info": "Json"
+        },
+        {
+          "name": "title",
+          "ordinal": 8,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "description",
+          "ordinal": 9,
+          "type_info": "Varchar"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        null,
+        true,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            SELECT \n                invoices.id, \n                invoices.invoice_number, \n                invoices.customer_id, \n                customers.name as customer_name, \n                invoices.total_amount, \n                invoices.invoice_date, \n                invoices.created_at, \n                row_to_json(job_schedules) as job_schedule,\n                invoices.title,\n                invoices.description \n            FROM invoices\n                INNER JOIN merchants ON merchants.id = invoices.merchant_id\n                INNER JOIN users ON users.id = merchants.user_id\n                INNER JOIN customers ON customers.id = invoices.customer_id\n                LEFT JOIN job_schedules ON job_schedules.job_data->>'invoice_id' = invoices.id::text\n            WHERE users.id = $1 AND invoices.deleted_at IS NULL AND customers.deleted_at IS NULL AND invoices.created_at > NOW() - INTERVAL '2 month'\n            ORDER BY invoices.created_at DESC\n            "
   },
   "f162ae88463790baa2ab375899953defab569e5d1323428517bb0fd12b197183": {
     "describe": {
