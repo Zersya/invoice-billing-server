@@ -25,3 +25,8 @@ pub struct RequestUpdateCustomer {
     #[validate(required)]
     pub tags: Option<Vec<String>>,
 }
+
+#[derive(Deserialize, Validate, Debug)]
+pub struct  RequestGetCustomers {
+    pub tags: Option<String>,
+}

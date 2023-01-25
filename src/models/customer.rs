@@ -1,5 +1,6 @@
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
+use sqlx::{Execute, QueryBuilder, Row};
 use uuid::Uuid;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -123,14 +124,15 @@ impl Customer {
     pub async fn get_by_merchant_id(
         db: &sqlx::PgPool,
         merchant_id: &Uuid,
+        tags: &Vec<String>,
     ) -> Result<Vec<CustomerWithContactChannels>, sqlx::Error> {
         let customers = sqlx::query_as!(
             CustomerWithContactChannels,
             r#"
             SELECT
-                customers.*, 
-                customer_contact_channels.contact_channel_id as contact_channel_id, 
-                customer_contact_channels.value as contact_channel_value, 
+                customers.*,
+                customer_contact_channels.contact_channel_id as contact_channel_id,
+                customer_contact_channels.value as contact_channel_value,
                 contact_channels.name as contact_channel_name
             FROM
                 customers
@@ -138,9 +140,11 @@ impl Customer {
                 INNER JOIN contact_channels ON contact_channels.id = customer_contact_channels.contact_channel_id
             WHERE
                 merchant_id = $1
+                AND (array_length($2::text[], 1) is NULL OR customers.tags && $2)
                 AND customers.deleted_at IS NULL
             "#,
-            merchant_id
+            merchant_id,
+            tags
         )
         .fetch_all(db)
         .await?;

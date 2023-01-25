@@ -1,4 +1,4 @@
-use axum::extract::Path;
+use axum::extract::{Path, Query};
 use axum::response::{IntoResponse, Response};
 use axum::Extension;
 use axum::{extract::State, response::Json};
@@ -6,7 +6,6 @@ use reqwest::StatusCode;
 use serde_json::json;
 use sqlx::PgPool;
 use uuid::Uuid;
-use validator::ValidationErrorsKind;
 
 use crate::errors::Errors;
 use crate::logger::Logger;
@@ -14,7 +13,7 @@ use crate::models::contact_channel::ContactChannel;
 use crate::models::customer::Customer;
 use crate::models::customer_contact_channel::CustomerContactChannel;
 use crate::models::job_schedule::JobSchedule;
-use crate::models::requests::customer::{RequestCreateCustomer, RequestUpdateCustomer};
+use crate::models::requests::customer::{RequestCreateCustomer, RequestUpdateCustomer, RequestGetCustomers};
 use crate::models::responses::DefaultResponse;
 
 pub async fn get_by_authenticated_user(
@@ -41,8 +40,22 @@ pub async fn get_by_merchant_id(
     State(db): State<PgPool>,
     Extension(_): Extension<Uuid>,
     Path((merchant_id,)): Path<(Uuid,)>,
+    Query(query): Query<RequestGetCustomers>,
 ) -> Response {
-    let customers = match Customer::get_by_merchant_id(&db, &merchant_id).await {
+
+    let tags = match query.tags {
+        Some(tags) => {
+            if tags.len() > 0 {
+                tags.split(",").map(|tag| tag.to_string()).collect()
+            }
+            else {
+                Vec::new()
+            }
+        }
+        None => Vec::new(),
+    };
+
+    let customers = match Customer::get_by_merchant_id(&db, &merchant_id, &tags).await {
         Ok(customers) => customers,
         Err(err) => {
             let body = DefaultResponse::error("get customers failed", err.to_string()).into_json();
