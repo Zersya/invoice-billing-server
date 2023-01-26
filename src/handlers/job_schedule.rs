@@ -34,7 +34,7 @@ pub async fn set_scheduler(
     if body.is_recurring && (body.start_at.is_none() || body.end_at.is_none()) {
         let body = DefaultResponse::error(
             "start_at and end_at is required for recurring job",
-            body.external_id.to_string(),
+            body.to_string(),
         )
         .into_json();
 
@@ -58,7 +58,7 @@ pub async fn set_scheduler(
     if end_at < start_at {
         let body = DefaultResponse::error(
             "end_at must be greater than start_at",
-            body.external_id.to_string(),
+            body.to_string(),
         )
         .into_json();
 
@@ -68,7 +68,7 @@ pub async fn set_scheduler(
     if start_at < now.naive_utc() {
         let body = DefaultResponse::error(
             format!("start_at must be greater than current time ( {} )", now).as_str(),
-            body.external_id.to_string(),
+            body.to_string(),
         )
         .into_json();
 
@@ -78,7 +78,7 @@ pub async fn set_scheduler(
     if body.is_recurring && end_at - start_at < chrono::Duration::days(5) {
         let body = DefaultResponse::error(
             "duration must be more than 5 days",
-            body.external_id.to_string(),
+            body.to_string(),
         )
         .into_json();
 
@@ -88,16 +88,16 @@ pub async fn set_scheduler(
     if body.is_recurring && body.repeat_interval_type.is_none() {
         let body = DefaultResponse::error(
             "repeat_interval_type is required for recurring job",
-            body.external_id.to_string(),
+            body.to_string(),
         )
         .into_json();
 
         return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
     }
 
-    let repeat_interval_type = match body.repeat_interval_type {
+    let repeat_interval_type = match &body.repeat_interval_type {
         Some(repeat_interval_type) => repeat_interval_type,
-        None => "ONCE".to_string(),
+        None => "ONCE",
     };
 
     let repeat_interval = if repeat_interval_type == "ONCE" {
@@ -136,7 +136,7 @@ pub async fn set_scheduler(
         job_schedule = match set_invoice_job_schedule(
             &db,
             &user_id,
-            &body.external_id,
+            &body.external_id.unwrap(),
             &start_at,
             &repeat_interval,
             &repeat_count,
@@ -156,47 +156,89 @@ pub async fn set_scheduler(
         if body.title.is_none() || body.title.as_ref().unwrap().is_empty() {
             let body = DefaultResponse::error(
                 "title is required for send_reminder job",
-                body.external_id.to_string(),
+                body.to_string()
             )
             .into_json();
 
             return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
-        }
+        } 
 
         if body.description.is_none() || body.description.as_ref().unwrap().is_empty() {
             let body = DefaultResponse::error(
                 "description is required for send_reminder job",
-                body.external_id.to_string(),
+                body.to_string(),
             )
             .into_json();
 
             return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
         }
 
-        job_schedule = match set_reminder_job_schedule(
-            &db,
-            &user_id,
-            &merchant_id,
-            &body.external_id,
-            &start_at,
-            &repeat_interval,
-            &repeat_count,
-            &body.title.unwrap(),
-            &body.description.unwrap(),
-        )
-        .await
-        {
-            Ok(job_schedule) => Some(job_schedule),
-            Err(err) => {
-                let body = DefaultResponse::error("set reminder scheduler failed", err.to_string())
+        let external_ids = match body.external_id {
+            Some(external_id) => Vec::from([external_id]),
+            None => {
+
+                if body.tag.is_none() || body.tag.as_ref().unwrap().is_empty() {
+                    let body = DefaultResponse::error(
+                        "tag is required for send_reminder job",
+                        body.to_string(),
+                    )
                     .into_json();
 
-                return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
-            }
+                    return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+                }
+
+                let mut tags = Vec::new();
+                tags.push(body.tag.unwrap());
+
+                let customers = match Customer::get_by_merchant_id(&db, &merchant_id, &tags).await {
+                    Ok(customers) => customers,
+                    Err(err) => {
+                        let body = DefaultResponse::error("get customers by tags failed", err.to_string())
+                            .into_json();
+
+                        return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+                    }
+                };
+
+                let mut external_ids = Vec::new();
+                for customer in customers {
+                    external_ids.push(customer.id);
+                }
+
+                external_ids
+                
+            } 
         };
+
+        let title = body.title.unwrap();
+        let description = body.description.unwrap();
+
+        for external_id in external_ids {
+            job_schedule = match set_reminder_job_schedule(
+                &db,
+                &user_id,
+                &merchant_id,
+                &external_id,
+                &start_at,
+                &repeat_interval,
+                &repeat_count,
+                &title,
+                &description,
+            )
+            .await
+            {
+                Ok(job_schedule) => Some(job_schedule),
+                Err(err) => {
+                    let body = DefaultResponse::error("set reminder scheduler failed", err.to_string())
+                        .into_json();
+    
+                    return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+                }
+            };
+        }
     } else {
         let body =
-            DefaultResponse::error("job_type is not supported", body.external_id.to_string())
+            DefaultResponse::error("job_type is not supported", body.to_string())
                 .into_json();
 
         return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();

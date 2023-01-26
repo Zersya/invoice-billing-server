@@ -9,7 +9,7 @@ use validator_derive::Validate;
 #[derive(Deserialize, Validate, Debug)]
 pub struct RequestSchedule {
     pub job_type: String,
-    pub external_id: Uuid,
+    pub external_id: Option<Uuid>,
     pub is_recurring: bool,
     pub title: Option<String>,
     pub description: Option<String>,
@@ -19,11 +19,28 @@ pub struct RequestSchedule {
     pub start_at: Option<NaiveDateTime>,
     #[serde(with = "default_date_format")]
     pub end_at: Option<NaiveDateTime>,
+    pub tag: Option<String>,
 }
 #[derive(Deserialize, Validate, Debug)]
 pub struct RequestSetStatusSchedule {
     #[validate(custom = "validate_status_job_schedule")]
     pub status: String,
+}
+
+impl RequestSchedule {
+    pub fn to_string(&self) -> String {
+        let mut result = String::new();
+        result.push_str(&format!("job_type: {:?}", self.job_type));
+        result.push_str(&format!("external_id: {:?}", self.external_id));
+        result.push_str(&format!("is_recurring: {:?}", self.is_recurring));
+        result.push_str(&format!("title: {:?}", self.title));
+        result.push_str(&format!("description: {:?}", self.description));
+        result.push_str(&format!("repeat_interval_type: {:?}", self.repeat_interval_type));
+        result.push_str(&format!("start_at: {:?}", self.start_at));
+        result.push_str(&format!("end_at: {:?}", self.end_at));
+        result.push_str(&format!("tag: {:?}", self.tag));
+        result
+    }
 }
 
 fn validate_repeat_interval_type(
