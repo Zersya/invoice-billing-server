@@ -173,6 +173,26 @@ impl Customer {
         Ok(customer)
     }
 
+    pub async fn get_tags_by_merchant_id(
+        db: &sqlx::PgPool,
+        merchant_id: &Uuid,
+    ) -> Result<Vec<String>, sqlx::Error> {
+        let tags = sqlx::query!(
+            r#"
+            SELECT DISTINCT unnest(tags) as tag
+            FROM customers
+            WHERE merchant_id = $1 AND deleted_at IS NULL
+            "#,
+            merchant_id
+        )
+        .fetch_all(db)
+        .await?;
+
+        let tags = tags.into_iter().map(|tag| tag.tag.unwrap()).collect::<Vec<String>>();
+
+        Ok(tags)
+    }
+
     pub async fn delete(
         db: &sqlx::PgPool,
         id: &Uuid,

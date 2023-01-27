@@ -292,3 +292,24 @@ pub async fn get_job_schedule_by_authenticated(
 
     (StatusCode::OK, body).into_response()
 }
+
+pub async fn get_tags_by_merchant_id(
+    State(db): State<PgPool>,
+    Extension(_): Extension<Uuid>,
+    Path(merchant_id): Path<Uuid>,
+) -> Response {
+    let tags = match Customer::get_tags_by_merchant_id(&db, &merchant_id).await {
+        Ok(tags) => tags,
+        Err(err) => {
+            let body = DefaultResponse::error("get tags failed", err.to_string()).into_json();
+
+            return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+        }
+    };
+
+    let body = DefaultResponse::ok("get tags success")
+        .with_data(json!(tags))
+        .into_json();
+
+    (StatusCode::OK, body).into_response()
+}

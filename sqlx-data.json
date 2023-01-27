@@ -1969,6 +1969,26 @@
     },
     "query": "\n            SELECT * FROM job_queues\n            WHERE job_schedule_id = $1 AND status != 'completed'\n            "
   },
+  "8ccc9e8ecbf60e7e342e672e98801571ab1649e60f4636cb7d2edfce6e6ca9b2": {
+    "describe": {
+      "columns": [
+        {
+          "name": "tag",
+          "ordinal": 0,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            SELECT DISTINCT unnest(tags) as tag\n            FROM customers\n            WHERE merchant_id = $1 AND deleted_at IS NULL\n            "
+  },
   "91ffb01ec372ce3eeb8b196ba20b2e097df105a002df3df51c8e5a2140ac6b83": {
     "describe": {
       "columns": [
