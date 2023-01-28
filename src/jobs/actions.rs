@@ -3,6 +3,7 @@ use std::ops::Add;
 use axum::http::HeaderValue;
 use chrono::{Duration, Utc};
 use cron::Schedule;
+use lettre::{transport::smtp::authentication::Credentials, SmtpTransport, Message, Transport};
 use rand::Rng;
 use serde_json::Value;
 use sqlx::PgPool;
@@ -195,19 +196,6 @@ pub async fn prepare_via_channels(
             }
         };
 
-    // This code finds the whatsapp contact channel, if it exists.
-    let whatsapp_contact_channel = match customer_contact_channels
-        .iter()
-        .find(|contact_channel| contact_channel.name == "whatsapp")
-    {
-        Some(whatsapp_contact_channel) => whatsapp_contact_channel,
-        None => {
-            return Err(Errors::new(&[(
-                "prepare_via_channels",
-                "Failed to prepare invoice",
-            )]));
-        }
-    };
     let mut message = String::new();
 
     if job_schedule.job_type == "send_invoice" {
@@ -232,18 +220,43 @@ pub async fn prepare_via_channels(
         };
     };
 
-    match whatsapp_send_message(
-        whatsapp_contact_channel.value.as_str(),
-        message.as_str(),
-        &schedule,
-    )
-    .await
-    {
-        Ok(_) => Ok(()),
-        Err(_) => {
-            return Err(Errors::new(&[("prepare_via_channels", "Failed to send message")]));
+    for contact_channel in customer_contact_channels.iter() {
+        if contact_channel.name == "whatsapp" {
+            match whatsapp_send_message(contact_channel.value.as_str(), message.as_str(), &schedule)
+                .await
+            {
+                Ok(_) => (),
+                Err(_) => {
+                    return Err(Errors::new(&[(
+                        "prepare_via_channels",
+                        "Failed to send message",
+                    )]));
+                }
+            }
+        } else if contact_channel.name == "email" {
+            let email = Message::builder()
+                .from("Reminder <hello@inving.co>".parse().unwrap())
+                .to(contact_channel.value.parse().unwrap())
+                .subject("Reminder")
+                .body(message.clone())
+                .unwrap();
+
+            let password = std::env::var("EMAIL_SENDGRID_API_KEY").unwrap();
+            let creds = Credentials::new("apikey".to_string(), password);
+
+            let mailer = SmtpTransport::relay("smtp.sendgrid.net")
+                .unwrap()
+                .credentials(creds)
+                .build();
+
+            match mailer.send(&email) {
+                Ok(_) => println!("Email sent successfully!"),
+                Err(e) => panic!("Could not send email: {:?}", e),
+            }
         }
     }
+
+    Ok(())
 }
 
 // generate constant vector of messages
@@ -390,11 +403,7 @@ async fn message_builder_invoice(
     Ok(msg)
 }
 
-fn message_builder_reminder(
-    job_data: Value,
-    merchant_name: &str,
-) -> Result<String, Errors> {
-    
+fn message_builder_reminder(job_data: Value, merchant_name: &str) -> Result<String, Errors> {
     let title = match job_data["title"].as_str() {
         Some(title) => title,
         None => {
