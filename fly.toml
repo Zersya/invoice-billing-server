@@ -8,7 +8,7 @@ processes = []
 [env]
   DATABASE_URL="postgres://invoice_billing_server:Ymunt8Y99LPYCHu@top2.nearest.of.invoice-billing-server-db.internal:5432/invoice_billing_server?sslmode=disable"
   APP_NAME="inving_server"
-  APP_HOST="api.inving.maresto.id"
+  APP_HOST="invoice-billing-server.fly.dev"
   ENV="development"
 
   APPKEY="lWHTaCmtfz0bWvOZpUsKerQK8ZwbMRed"

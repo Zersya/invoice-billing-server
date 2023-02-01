@@ -8,6 +8,21 @@ use validator::{Validate, ValidationError, ValidationErrors, ValidationErrorsKin
 
 use crate::models::responses::{DefaultResponse, Message};
 
+pub struct EmailError {
+    pub email: String,
+    pub message: String,
+}
+
+impl EmailError {
+    pub fn new(email: String, message: String) -> Self {
+        Self { email, message }
+    }
+
+    pub fn to_string(&self) -> String {
+        format!("{}: {}", self.email, self.message)
+    }
+}
+
 #[derive(Debug)]
 pub struct Errors {
     errors: ValidationErrors,

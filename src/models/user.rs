@@ -12,6 +12,7 @@ pub struct User {
     pub updated_at: NaiveDateTime,
     pub deleted_at: Option<NaiveDateTime>,
     pub status: String,
+    pub verified_at: Option<NaiveDateTime>,
 }
 
 impl User {

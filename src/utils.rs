@@ -18,13 +18,10 @@ pub mod default_date_format {
     where
         D: Deserializer<'de>,
     {
-
         // if undefined, return None
         let s: Option<String> = match Deserialize::deserialize(deserializer) {
-
             Ok(s) => s,
             Err(err) => return Err(serde::de::Error::custom(err)),
-            
         };
 
         if s.is_none() {

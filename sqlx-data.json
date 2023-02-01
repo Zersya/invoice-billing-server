@@ -634,6 +634,11 @@
           "name": "status",
           "ordinal": 7,
           "type_info": "Varchar"
+        },
+        {
+          "name": "verified_at",
+          "ordinal": 8,
+          "type_info": "Timestamp"
         }
       ],
       "nullable": [
@@ -644,7 +649,8 @@
         false,
         false,
         true,
-        false
+        false,
+        true
       ],
       "parameters": {
         "Left": []
@@ -736,6 +742,11 @@
           "name": "status",
           "ordinal": 7,
           "type_info": "Varchar"
+        },
+        {
+          "name": "verified_at",
+          "ordinal": 8,
+          "type_info": "Timestamp"
         }
       ],
       "nullable": [
@@ -746,7 +757,8 @@
         false,
         false,
         true,
-        false
+        false,
+        true
       ],
       "parameters": {
         "Left": [
@@ -800,6 +812,11 @@
           "name": "status",
           "ordinal": 7,
           "type_info": "Varchar"
+        },
+        {
+          "name": "verified_at",
+          "ordinal": 8,
+          "type_info": "Timestamp"
         }
       ],
       "nullable": [
@@ -810,7 +827,8 @@
         false,
         false,
         true,
-        false
+        false,
+        true
       ],
       "parameters": {
         "Left": [
@@ -859,6 +877,77 @@
       }
     },
     "query": "\n            SELECT\n                a.id,\n                a.customer_id,\n                a.value,\n                c.name\n            FROM\n                customer_contact_channels a\n                LEFT JOIN customers b ON b.id = a.customer_id\n                LEFT JOIN contact_channels c ON c.id = a.contact_channel_id\n            WHERE \n                a.customer_id = $1 AND b.merchant_id = $2 AND a.deleted_at IS NULL\n            GROUP BY\n                a.id, c.name\n            "
+  },
+  "3692099230c0f5a0df2ff7c587d3a83187afb53d8928017771387ade54e1565f": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "user_id",
+          "ordinal": 1,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "customer_id",
+          "ordinal": 2,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "code",
+          "ordinal": 3,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "status",
+          "ordinal": 4,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "expires_at",
+          "ordinal": 5,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 6,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 7,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "deleted_at",
+          "ordinal": 8,
+          "type_info": "Timestamp"
+        }
+      ],
+      "nullable": [
+        false,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid",
+          "Varchar",
+          "Timestamp"
+        ]
+      }
+    },
+    "query": "\n            INSERT INTO verifications (user_id, customer_id, code, status, expires_at)\n            VALUES ($1, $2, $3, 'pending', $4)\n            RETURNING *\n            "
   },
   "428648e5cd079233bfcccabc0f329304dbe691bbe5017731748de0d9b2ce6d6f": {
     "describe": {
@@ -1531,6 +1620,11 @@
           "name": "status",
           "ordinal": 7,
           "type_info": "Varchar"
+        },
+        {
+          "name": "verified_at",
+          "ordinal": 8,
+          "type_info": "Timestamp"
         }
       ],
       "nullable": [
@@ -1541,7 +1635,8 @@
         false,
         false,
         true,
-        false
+        false,
+        true
       ],
       "parameters": {
         "Left": [
@@ -2457,6 +2552,11 @@
           "name": "status",
           "ordinal": 7,
           "type_info": "Varchar"
+        },
+        {
+          "name": "verified_at",
+          "ordinal": 8,
+          "type_info": "Timestamp"
         }
       ],
       "nullable": [
@@ -2467,7 +2567,8 @@
         false,
         false,
         true,
-        false
+        false,
+        true
       ],
       "parameters": {
         "Left": [
@@ -3144,6 +3245,74 @@
       }
     },
     "query": "\n            UPDATE job_schedules\n            SET repeat_count = $1\n            WHERE id = $2\n            RETURNING *\n            "
+  },
+  "dff148c963949358842abe3f125853e3111199cdec82d57a5957b1938843f93e": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "user_id",
+          "ordinal": 1,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "customer_id",
+          "ordinal": 2,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "code",
+          "ordinal": 3,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "status",
+          "ordinal": 4,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "expires_at",
+          "ordinal": 5,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 6,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 7,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "deleted_at",
+          "ordinal": 8,
+          "type_info": "Timestamp"
+        }
+      ],
+      "nullable": [
+        false,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            SELECT *\n            FROM verifications\n            WHERE user_id = $1\n            AND status = 'pending'\n            AND deleted_at IS NULL\n            "
   },
   "e466919aedad9eababc593ccfe894fc1a78d74e49f7450434f3ec81dad847642": {
     "describe": {

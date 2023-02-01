@@ -10,3 +10,4 @@ pub mod invoice;
 pub mod job_schedule;
 pub mod job_queue;
 pub mod tester;
+pub mod verification;

@@ -4,6 +4,7 @@ use crate::models::requests::auth::{RequestLogin, RequestRegister};
 use crate::models::responses::DefaultResponse;
 use crate::models::tester::Tester;
 use crate::models::user::User;
+use crate::models::verification::Verification;
 
 use argon2::{self, Config};
 use argon2::{ThreadMode, Variant, Version};
@@ -14,6 +15,8 @@ use crypto_hash::{hex_digest, Algorithm};
 use reqwest::StatusCode;
 use serde_json::json;
 use sqlx::PgPool;
+
+use super::verification::send_email_verification;
 
 pub async fn register(State(db): State<PgPool>, Json(payload): Json<RequestRegister>) -> Response {
     let mut extractor = FieldValidator::validate(&payload);
@@ -50,21 +53,48 @@ pub async fn register(State(db): State<PgPool>, Json(payload): Json<RequestRegis
     };
 
     let email = email.trim().to_string().to_lowercase();
-    let password = password.trim().to_string().to_lowercase();
+    let password = password.trim().to_string();
     let hash = argon2::hash_encoded(password.as_bytes(), &salt.as_bytes(), &config).unwrap();
 
     let user = match User::create(&db, &name, &email, &hash).await {
         Ok(user) => user,
         Err(err) => {
-            let body = DefaultResponse::error("register failed", err.to_string()).into_json();
+            let body = DefaultResponse::error("register error", err.to_string()).into_json();
 
             return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
         }
     };
 
-    let body = DefaultResponse::ok("register success, we will inform you when your account is ready")
-        .with_data(json!(user))
-        .into_json();
+    let code = rand::Rng::sample_iter(rand::thread_rng(), &rand::distributions::Alphanumeric)
+        .take(6)
+        .map(char::from)
+        .collect::<String>();
+
+    match Verification::create(&db, Some(user.id), None, &code).await {
+        Ok(verification) => verification,
+        Err(err) => {
+            let body = DefaultResponse::error("register error", err.to_string()).into_json();
+
+            return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+        }
+    };
+
+    let base_url = std::env::var("APP_HOST").unwrap();
+    let url_verification = format!("http://{}/verify?code={}&user_id={}", base_url, code, user.id);
+
+    match send_email_verification(&user.name, &email, &url_verification).await {
+        Ok(_) => (),
+        Err(err) => {
+            let body = DefaultResponse::error("register error", err.to_string()).into_json();
+
+            return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+        }
+    };
+
+    let body =
+        DefaultResponse::ok("register success, we will inform you when your account is ready")
+            .with_data(json!(user))
+            .into_json();
 
     (StatusCode::CREATED, body).into_response()
 }
@@ -79,6 +109,7 @@ pub async fn login(State(db): State<PgPool>, Json(payload): Json<RequestLogin>) 
         Err(err) => return (StatusCode::UNPROCESSABLE_ENTITY, err.into_response()).into_response(),
     }
 
+    let email = email.trim().to_string().to_lowercase();
     let user = match User::get_by_email(&db, &email).await {
         Ok(user) => user,
         Err(err) => {
@@ -91,7 +122,11 @@ pub async fn login(State(db): State<PgPool>, Json(payload): Json<RequestLogin>) 
     let tester = match Tester::get_by_user_id(&db, user.id).await {
         Ok(tester) => tester,
         Err(err) => {
-            let body = DefaultResponse::error("It looks like you have not registered as a tester.", err.to_string()).into_json();
+            let body = DefaultResponse::error(
+                "It looks like you have not registered as a tester.",
+                err.to_string(),
+            )
+            .into_json();
 
             return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
         }
