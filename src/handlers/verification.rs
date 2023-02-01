@@ -5,7 +5,7 @@ use serde::Deserialize;
 use sqlx::PgPool;
 use validator_derive::Validate;
 
-use crate::{errors::EmailError, models::{verification::Verification, user::User}};
+use crate::{errors::ChannelError, models::{verification::Verification, user::User, customer::Customer, contact_channel::ContactChannel}};
 
 #[derive(Deserialize, Validate, Debug)]
 pub struct VerifyQuery {
@@ -41,6 +41,18 @@ pub async fn auth(
                     }
                 }
             }
+
+            if verification.customer_id.is_some() {
+                let customer = Customer::get_by_id_only(&db, verification.customer_id.unwrap()).await.unwrap();
+
+                match Customer::update_verified_at(&db, &customer.id, &now).await {
+                    Ok(_) => (),
+                    Err(e) => {
+                        panic!("Error updating customer verified_at: {}", e)
+                    }
+                }
+            }
+
             match Verification::update_status(&db, &verification.id, &"verified".to_string()).await {
                 Ok(_) => (),
                 Err(e) => {
@@ -56,12 +68,76 @@ pub async fn auth(
     return Html("<h1>Hello world</h1>");
 }
 
+pub async fn setup_verification(db: &sqlx::PgPool, user_id: Option<uuid::Uuid>, customer_id: Option<uuid::Uuid>, contact_channel_name: String, contact_value: String) -> Result<(), ChannelError> {
+    let code = rand::Rng::sample_iter(rand::thread_rng(), &rand::distributions::Alphanumeric)
+        .take(6)
+        .map(char::from)
+        .collect::<String>();
+
+    let verification = match Verification::create(&db, user_id, customer_id, &code).await {
+        Ok(verification) => verification,
+        Err(err) => {
+            return Err(ChannelError {
+                value: "setup verification error".to_string(),
+                message: err.to_string(),
+            });
+        }
+    };
+
+    let base_url = std::env::var("APP_HOST").unwrap();
+    let url_verification = format!(
+        "http://{}/verify?code={}&id={}",
+        base_url, code, verification.id
+    );
+
+    let recepient_name = if user_id.is_some() {
+        let user = match User::get_by_id(&db, user_id.unwrap()).await {
+            Ok(user) => user,
+            Err(err) => {
+                return Err(ChannelError {
+                    value: "setup verification error".to_string(),
+                    message: err.to_string(),
+                });
+            }
+        };
+
+        user.name
+    } else {
+        let customer = match Customer::get_by_id_only(&db, customer_id.unwrap()).await {
+            Ok(customer) => customer,
+            Err(err) => {
+                return Err(ChannelError {
+                    value: "setup verification error".to_string(),
+                    message: err.to_string(),
+                });
+            }
+        };
+
+        customer.name
+    };
+
+    if contact_channel_name == "email" {
+        match send_email_verification(&recepient_name, &contact_value, &url_verification).await {
+            Ok(_) => (),
+            Err(err) => {
+                return Err(ChannelError {
+                    value: "setup verification error".to_string(),
+                    message: err.to_string(),
+                });
+            }
+        };
+    }
+
+    Ok(())
+
+}
+
 
 pub async fn send_email_verification(
     name: &String,
     email_recepient: &String,
     url_verification: &String,
-) -> Result<(), EmailError> {
+) -> Result<(), ChannelError> {
     let message = format!(
         "Hello {}, thank you for registering in Inving. Please click this link to verify your account: \n\n{}",
         name, url_verification, 
@@ -84,8 +160,8 @@ pub async fn send_email_verification(
 
     match mailer.send(&email) {
         Ok(_) => Ok(()),
-        Err(e) => Err(EmailError {
-            email: email_recepient.to_string(),
+        Err(e) => Err(ChannelError {
+            value: email_recepient.to_string(),
             message: e.to_string(),
         }),
     }

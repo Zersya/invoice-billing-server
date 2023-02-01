@@ -1801,6 +1801,68 @@
     },
     "query": "\n            UPDATE job_queues\n            SET status = $2\n            WHERE id = $1\n            RETURNING *\n            "
   },
+  "7e26ffa3d74ca8dff20a966af4a781edf6e6ea32f8bc83cc81a26c467a136d74": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "name",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "merchant_id",
+          "ordinal": 2,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 3,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 4,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "deleted_at",
+          "ordinal": 5,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "tags",
+          "ordinal": 6,
+          "type_info": "TextArray"
+        },
+        {
+          "name": "verified_at",
+          "ordinal": 7,
+          "type_info": "Timestamp"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            SELECT *\n            FROM customers\n            WHERE id = $1 AND deleted_at IS NULL\n            "
+  },
   "7edd8386c9544e567f63dffc71fca242a3b34ef4273b6fcaaabb83db43fa0bd6": {
     "describe": {
       "columns": [
@@ -3382,6 +3444,69 @@
     },
     "query": "\n            INSERT INTO invoices (invoice_number, customer_id, merchant_id, amount, total_amount, tax_amount, tax_rate, invoice_date, created_by, title, description)\n            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)\n            RETURNING *\n            "
   },
+  "d97cf540c40a05e7c509c48b3bc2ab318e4b914a9b3e1dce1095541d714c1c78": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "name",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "merchant_id",
+          "ordinal": 2,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 3,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 4,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "deleted_at",
+          "ordinal": 5,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "tags",
+          "ordinal": 6,
+          "type_info": "TextArray"
+        },
+        {
+          "name": "verified_at",
+          "ordinal": 7,
+          "type_info": "Timestamp"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Timestamp",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            UPDATE customers\n            SET verified_at = $1\n            WHERE id = $2 AND deleted_at IS NULL\n            RETURNING *\n            "
+  },
   "d99474b6d36478362d7293e8ea50d3c68bbd00c8017be1c16b864654808b2aa8": {
     "describe": {
       "columns": [
@@ -4102,5 +4227,49 @@
       }
     },
     "query": "\n            INSERT INTO customers (name, merchant_id, tags)\n            VALUES ($1, $2, $3)\n            RETURNING *\n            "
+  },
+  "ff2d8b91b94be7567f62b42f81e038e0479c3fce979f83cfbe486ef886e1642d": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "name",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 2,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 3,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "deleted_at",
+          "ordinal": 4,
+          "type_info": "Timestamp"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            SELECT *\n            FROM contact_channels\n            WHERE id = $1\n            AND deleted_at IS NULL\n            "
   }
 }

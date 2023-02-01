@@ -34,4 +34,24 @@ impl ContactChannel {
 
         Ok(contact_channels)
     }
+
+    pub async fn get_by_id (
+        db: &sqlx::PgPool,
+        id: &Uuid,
+    ) -> Result<ContactChannel, sqlx::Error> {
+        let contact_channel = sqlx::query_as!(
+            ContactChannel,
+            r#"
+            SELECT *
+            FROM contact_channels
+            WHERE id = $1
+            AND deleted_at IS NULL
+            "#,
+            id,
+        )
+        .fetch_one(db)
+        .await?;
+
+        Ok(contact_channel)
+    }
 }

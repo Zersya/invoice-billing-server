@@ -16,7 +16,7 @@ use reqwest::StatusCode;
 use serde_json::json;
 use sqlx::PgPool;
 
-use super::verification::send_email_verification;
+use super::verification::{send_email_verification, setup_verification};
 
 pub async fn register(State(db): State<PgPool>, Json(payload): Json<RequestRegister>) -> Response {
     let mut extractor = FieldValidator::validate(&payload);
@@ -65,31 +65,15 @@ pub async fn register(State(db): State<PgPool>, Json(payload): Json<RequestRegis
         }
     };
 
-    let code = rand::Rng::sample_iter(rand::thread_rng(), &rand::distributions::Alphanumeric)
-        .take(6)
-        .map(char::from)
-        .collect::<String>();
-
-    let verification = match Verification::create(&db, Some(user.id), None, &code).await {
-        Ok(verification) => verification,
-        Err(err) => {
-            let body = DefaultResponse::error("register error", err.to_string()).into_json();
-
-            return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
-        }
-    };
-
-    let base_url = std::env::var("APP_HOST").unwrap();
-    let url_verification = format!("http://{}/verify?code={}&id={}", base_url, code, verification.id);
-
-    match send_email_verification(&user.name, &email, &url_verification).await {
+    match setup_verification(&db, Some(user.id), None, "email".to_string(), email).await {
         Ok(_) => (),
         Err(err) => {
-            let body = DefaultResponse::error("register error", err.to_string()).into_json();
+            let body =
+                DefaultResponse::error("create user failed", err.to_string()).into_json();
 
             return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
         }
-    };
+    }
 
     let body =
         DefaultResponse::ok("register success, we will inform you when your account is ready")

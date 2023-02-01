@@ -13,8 +13,13 @@ use crate::models::contact_channel::ContactChannel;
 use crate::models::customer::Customer;
 use crate::models::customer_contact_channel::CustomerContactChannel;
 use crate::models::job_schedule::JobSchedule;
-use crate::models::requests::customer::{RequestCreateCustomer, RequestUpdateCustomer, RequestGetCustomers};
+use crate::models::requests::customer::{
+    RequestCreateCustomer, RequestGetCustomers, RequestUpdateCustomer,
+};
 use crate::models::responses::DefaultResponse;
+use crate::models::verification::Verification;
+
+use super::verification::{send_email_verification, setup_verification};
 
 pub async fn get_by_authenticated_user(
     State(db): State<PgPool>,
@@ -42,13 +47,11 @@ pub async fn get_by_merchant_id(
     Path((merchant_id,)): Path<(Uuid,)>,
     Query(query): Query<RequestGetCustomers>,
 ) -> Response {
-
     let tags = match query.tags {
         Some(tags) => {
             if tags.len() > 0 {
                 tags.split(",").map(|tag| tag.to_string()).collect()
-            }
-            else {
+            } else {
                 Vec::new()
             }
         }
@@ -86,14 +89,9 @@ pub async fn create(
                 body.contact_channel_value.unwrap(),
             ),
             Err(err) => {
-                
                 let value = Errors::into_string(err);
 
-                let body = DefaultResponse::error(
-                    value.as_str(),
-                    "".to_string(),
-                )
-                .into_json();
+                let body = DefaultResponse::error(value.as_str(), "".to_string()).into_json();
                 return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
             }
         };
@@ -106,8 +104,6 @@ pub async fn create(
         {
             Ok(customer) => customer,
             Err(err) => {
-                Logger::new(format!("{:?}", err)).log();
-
                 db_transaction
                     .rollback()
                     .await
@@ -121,29 +117,27 @@ pub async fn create(
         };
 
     // remove + in +62 from phone number
-    let phone_number = contact_channel_value.replace("+", "");
+    let contact_value = contact_channel_value.replace("+", "");
 
     // replace first 0 with 62 if phone number start with 0
-    let phone_number: String = if phone_number.starts_with("0") {
-        let mut phone = phone_number.clone();
+    let contact_value: String = if contact_value.starts_with("0") {
+        let mut phone = contact_value.clone();
         phone.replace_range(0..1, "62");
         phone
     } else {
-        phone_number
+        contact_value
     };
 
     match CustomerContactChannel::create_using_transaction(
         &mut db_transaction,
         &customer.id,
         &contact_channel_id,
-        &phone_number,
+        &contact_value,
     )
     .await
     {
         Ok(customer_contact_channel) => customer_contact_channel,
         Err(err) => {
-            Logger::new(format!("{:?}", err)).log();
-
             db_transaction
                 .rollback()
                 .await
@@ -160,6 +154,35 @@ pub async fn create(
         .commit()
         .await
         .expect("Failed to commit transaction");
+
+    let contact_channel = match ContactChannel::get_by_id(&db, &contact_channel_id).await {
+        Ok(contact_channel) => contact_channel,
+        Err(err) => {
+            let body = DefaultResponse::ok("create customer success")
+                .with_data(json!(customer))
+                .into_json();
+
+            return (StatusCode::CREATED, body).into_response();
+        }
+    };
+
+    match setup_verification(
+        &db,
+        None,
+        Some(customer.id),
+        contact_channel.name,
+        contact_value,
+    )
+    .await
+    {
+        Ok(_) => (),
+        Err(err) => {
+            let body =
+                DefaultResponse::error("create customer failed", err.to_string()).into_json();
+
+            return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+        }
+    }
 
     let body = DefaultResponse::ok("create customer success")
         .with_data(json!(customer))

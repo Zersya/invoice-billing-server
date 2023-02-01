@@ -154,6 +154,22 @@ impl Customer {
         Ok(customers)
     }
 
+    pub async fn get_by_id_only(db: &sqlx::PgPool, id: Uuid) -> Result<Customer, sqlx::Error> {
+        let customer = sqlx::query_as!(
+            Customer,
+            r#"
+            SELECT *
+            FROM customers
+            WHERE id = $1 AND deleted_at IS NULL
+            "#,
+            id
+        )
+        .fetch_one(db)
+        .await?;
+
+        Ok(customer)
+    }
+
     pub async fn get_by_id(
         db: &sqlx::PgPool,
         id: Uuid,
@@ -190,7 +206,10 @@ impl Customer {
         .fetch_all(db)
         .await?;
 
-        let tags = tags.into_iter().map(|tag| tag.tag.unwrap()).collect::<Vec<String>>();
+        let tags = tags
+            .into_iter()
+            .map(|tag| tag.tag.unwrap())
+            .collect::<Vec<String>>();
 
         Ok(tags)
     }
@@ -210,6 +229,28 @@ impl Customer {
             "#,
             id,
             merchant_id
+        )
+        .fetch_one(db)
+        .await?;
+
+        Ok(customer)
+    }
+
+    pub async fn update_verified_at(
+        db: &sqlx::PgPool,
+        id: &Uuid,
+        verified_at: &NaiveDateTime,
+    ) -> Result<Customer, sqlx::Error> {
+        let customer = sqlx::query_as!(
+            Customer,
+            r#"
+            UPDATE customers
+            SET verified_at = $1
+            WHERE id = $2 AND deleted_at IS NULL
+            RETURNING *
+            "#,
+            verified_at,
+            id
         )
         .fetch_one(db)
         .await?;

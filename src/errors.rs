@@ -8,18 +8,18 @@ use validator::{Validate, ValidationError, ValidationErrors, ValidationErrorsKin
 
 use crate::models::responses::{DefaultResponse, Message};
 
-pub struct EmailError {
-    pub email: String,
+pub struct ChannelError {
+    pub value: String,
     pub message: String,
 }
 
-impl EmailError {
-    pub fn new(email: String, message: String) -> Self {
-        Self { email, message }
+impl ChannelError {
+    pub fn new(value: String, message: String) -> Self {
+        Self { value, message }
     }
 
     pub fn to_string(&self) -> String {
-        format!("{}: {}", self.email, self.message)
+        format!("{}: {}", self.value, self.message)
     }
 }
 
