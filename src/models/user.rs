@@ -96,4 +96,26 @@ impl User {
 
         Ok(user)
     }
+
+    pub async fn update_verified_at(
+        db: &sqlx::PgPool,
+        id: &Uuid,
+        verified_at: &NaiveDateTime,
+    ) -> Result<User, sqlx::Error> {
+        let user = sqlx::query_as!(
+            User,
+            r#"
+            UPDATE users
+            SET verified_at = $1
+            WHERE id = $2
+            RETURNING *
+            "#,
+            verified_at,
+            id
+        )
+        .fetch_one(db)
+        .await?;
+
+        Ok(user)
+    }
 }

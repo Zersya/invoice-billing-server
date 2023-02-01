@@ -70,7 +70,7 @@ pub async fn register(State(db): State<PgPool>, Json(payload): Json<RequestRegis
         .map(char::from)
         .collect::<String>();
 
-    match Verification::create(&db, Some(user.id), None, &code).await {
+    let verification = match Verification::create(&db, Some(user.id), None, &code).await {
         Ok(verification) => verification,
         Err(err) => {
             let body = DefaultResponse::error("register error", err.to_string()).into_json();
@@ -80,7 +80,7 @@ pub async fn register(State(db): State<PgPool>, Json(payload): Json<RequestRegis
     };
 
     let base_url = std::env::var("APP_HOST").unwrap();
-    let url_verification = format!("http://{}/verify?code={}&user_id={}", base_url, code, user.id);
+    let url_verification = format!("http://{}/verify?code={}&id={}", base_url, code, verification.id);
 
     match send_email_verification(&user.name, &email, &url_verification).await {
         Ok(_) => (),

@@ -131,6 +131,7 @@ pub async fn axum() {
         .route_layer(auth_middleware)
         .route("/login", post(handlers::auth::login))
         .route("/register", post(handlers::auth::register))
+        .route("/verify", get(handlers::verification::auth))
         .route("/", get(handlers::user::hello_world))
         .layer(
             CorsLayer::new()

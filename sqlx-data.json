@@ -39,18 +39,23 @@
           "type_info": "TextArray"
         },
         {
-          "name": "contact_channel_id",
+          "name": "verified_at",
           "ordinal": 7,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "contact_channel_id",
+          "ordinal": 8,
           "type_info": "Uuid"
         },
         {
           "name": "contact_channel_value",
-          "ordinal": 8,
+          "ordinal": 9,
           "type_info": "Varchar"
         },
         {
           "name": "contact_channel_name",
-          "ordinal": 9,
+          "ordinal": 10,
           "type_info": "Varchar"
         }
       ],
@@ -62,6 +67,7 @@
         false,
         true,
         false,
+        true,
         false,
         false,
         false
@@ -112,6 +118,11 @@
           "name": "tags",
           "ordinal": 6,
           "type_info": "TextArray"
+        },
+        {
+          "name": "verified_at",
+          "ordinal": 7,
+          "type_info": "Timestamp"
         }
       ],
       "nullable": [
@@ -121,7 +132,8 @@
         false,
         false,
         true,
-        false
+        false,
+        true
       ],
       "parameters": {
         "Left": [
@@ -394,6 +406,11 @@
           "name": "tags",
           "ordinal": 6,
           "type_info": "TextArray"
+        },
+        {
+          "name": "verified_at",
+          "ordinal": 7,
+          "type_info": "Timestamp"
         }
       ],
       "nullable": [
@@ -403,7 +420,8 @@
         false,
         false,
         true,
-        false
+        false,
+        true
       ],
       "parameters": {
         "Left": [
@@ -770,6 +788,76 @@
     },
     "query": "\n            INSERT INTO users (name, email, password)\n            VALUES ($1, $2, $3)\n            RETURNING *\n            "
   },
+  "292389aa0ee70c01df4bf599545f8a70bf965f7c85e48bc3f73948d8d1a3d5fb": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "user_id",
+          "ordinal": 1,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "customer_id",
+          "ordinal": 2,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "code",
+          "ordinal": 3,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "status",
+          "ordinal": 4,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "expires_at",
+          "ordinal": 5,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 6,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 7,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "deleted_at",
+          "ordinal": 8,
+          "type_info": "Timestamp"
+        }
+      ],
+      "nullable": [
+        false,
+        true,
+        true,
+        false,
+        false,
+        true,
+        false,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid",
+          "Varchar"
+        ]
+      }
+    },
+    "query": "\n            INSERT INTO verifications (user_id, customer_id, code, status)\n            VALUES ($1, $2, $3, 'pending')\n            RETURNING *\n            "
+  },
   "2eb1a0c1abf061c8b99a7caf1c91fe7a255eb79686854a5dda56fd9686deb0e3": {
     "describe": {
       "columns": [
@@ -877,77 +965,6 @@
       }
     },
     "query": "\n            SELECT\n                a.id,\n                a.customer_id,\n                a.value,\n                c.name\n            FROM\n                customer_contact_channels a\n                LEFT JOIN customers b ON b.id = a.customer_id\n                LEFT JOIN contact_channels c ON c.id = a.contact_channel_id\n            WHERE \n                a.customer_id = $1 AND b.merchant_id = $2 AND a.deleted_at IS NULL\n            GROUP BY\n                a.id, c.name\n            "
-  },
-  "3692099230c0f5a0df2ff7c587d3a83187afb53d8928017771387ade54e1565f": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "user_id",
-          "ordinal": 1,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "customer_id",
-          "ordinal": 2,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "code",
-          "ordinal": 3,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "status",
-          "ordinal": 4,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "expires_at",
-          "ordinal": 5,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "created_at",
-          "ordinal": 6,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "updated_at",
-          "ordinal": 7,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "deleted_at",
-          "ordinal": 8,
-          "type_info": "Timestamp"
-        }
-      ],
-      "nullable": [
-        false,
-        true,
-        true,
-        false,
-        false,
-        false,
-        false,
-        false,
-        true
-      ],
-      "parameters": {
-        "Left": [
-          "Uuid",
-          "Uuid",
-          "Varchar",
-          "Timestamp"
-        ]
-      }
-    },
-    "query": "\n            INSERT INTO verifications (user_id, customer_id, code, status, expires_at)\n            VALUES ($1, $2, $3, 'pending', $4)\n            RETURNING *\n            "
   },
   "428648e5cd079233bfcccabc0f329304dbe691bbe5017731748de0d9b2ce6d6f": {
     "describe": {
@@ -1176,6 +1193,75 @@
       }
     },
     "query": "\n            UPDATE job_schedules\n            SET status = $1\n            WHERE id = $2\n            RETURNING *\n            "
+  },
+  "48195925b4b36efbe83625ac47de3639639178dfabc570b8144809b94aaa55e9": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "name",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "email",
+          "ordinal": 2,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "password",
+          "ordinal": 3,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 4,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 5,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "deleted_at",
+          "ordinal": 6,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "status",
+          "ordinal": 7,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "verified_at",
+          "ordinal": 8,
+          "type_info": "Timestamp"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Timestamp",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            UPDATE users\n            SET verified_at = $1\n            WHERE id = $2\n            RETURNING *\n            "
   },
   "5409dea415acfada56555845b61171b9d41806f5eaefe5df888594f45424487c": {
     "describe": {
@@ -2121,6 +2207,11 @@
           "name": "tags",
           "ordinal": 6,
           "type_info": "TextArray"
+        },
+        {
+          "name": "verified_at",
+          "ordinal": 7,
+          "type_info": "Timestamp"
         }
       ],
       "nullable": [
@@ -2130,7 +2221,8 @@
         false,
         false,
         true,
-        false
+        false,
+        true
       ],
       "parameters": {
         "Left": [
@@ -2278,6 +2370,11 @@
           "name": "tags",
           "ordinal": 6,
           "type_info": "TextArray"
+        },
+        {
+          "name": "verified_at",
+          "ordinal": 7,
+          "type_info": "Timestamp"
         }
       ],
       "nullable": [
@@ -2287,7 +2384,8 @@
         false,
         false,
         true,
-        false
+        false,
+        true
       ],
       "parameters": {
         "Left": [
@@ -2774,6 +2872,74 @@
     },
     "query": "\n            SELECT * FROM job_schedules\n            WHERE job_data->>'customer_id' = $1\n            ORDER BY created_at DESC\n            "
   },
+  "c58eb797735207d251121404ebf8d1b760953c9e553859e493ba45bbda2926f6": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "user_id",
+          "ordinal": 1,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "customer_id",
+          "ordinal": 2,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "code",
+          "ordinal": 3,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "status",
+          "ordinal": 4,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "expires_at",
+          "ordinal": 5,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 6,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 7,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "deleted_at",
+          "ordinal": 8,
+          "type_info": "Timestamp"
+        }
+      ],
+      "nullable": [
+        false,
+        true,
+        true,
+        false,
+        false,
+        true,
+        false,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            SELECT *\n            FROM verifications\n            WHERE id = $1\n            AND deleted_at IS NULL\n            "
+  },
   "c59e1ec3b5305b4e6c1268330502ab32cc08c0f6ce1a523d2631b0e806ef49c0": {
     "describe": {
       "columns": [
@@ -3026,6 +3192,75 @@
       }
     },
     "query": "\n            UPDATE merchants\n            SET deleted_at = NOW()\n            WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL\n            RETURNING *\n            "
+  },
+  "d71f1f234ca29b7acf4df769a326689a02e2c08aedbe955c58d0dea2f7522fc4": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "user_id",
+          "ordinal": 1,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "customer_id",
+          "ordinal": 2,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "code",
+          "ordinal": 3,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "status",
+          "ordinal": 4,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "expires_at",
+          "ordinal": 5,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 6,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 7,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "deleted_at",
+          "ordinal": 8,
+          "type_info": "Timestamp"
+        }
+      ],
+      "nullable": [
+        false,
+        true,
+        true,
+        false,
+        false,
+        true,
+        false,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Varchar"
+        ]
+      }
+    },
+    "query": "\n            UPDATE verifications\n            SET status = $2\n            WHERE id = $1\n            RETURNING *\n            "
   },
   "d7e720c3e40b76004e29e68441c3d2ff88383682380d246c63754d73592814de": {
     "describe": {
@@ -3301,7 +3536,7 @@
         true,
         false,
         false,
-        false,
+        true,
         false,
         false,
         true
@@ -3841,6 +4076,11 @@
           "name": "tags",
           "ordinal": 6,
           "type_info": "TextArray"
+        },
+        {
+          "name": "verified_at",
+          "ordinal": 7,
+          "type_info": "Timestamp"
         }
       ],
       "nullable": [
@@ -3850,7 +4090,8 @@
         false,
         false,
         true,
-        false
+        false,
+        true
       ],
       "parameters": {
         "Left": [

@@ -4,7 +4,7 @@ CREATE TABLE verifications (
     customer_id uuid,
     code VARCHAR(255) NOT NULL,
     status VARCHAR(255) NOT NULL,
-    expires_at TIMESTAMP NOT NULL,
+    expires_at TIMESTAMP,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
     deleted_at TIMESTAMP,
@@ -15,3 +15,4 @@ CREATE TABLE verifications (
 
 -- Add up migration script here
 ALTER TABLE users ADD COLUMN verified_at TIMESTAMP;
+ALTER TABLE customers ADD COLUMN verified_at TIMESTAMP;

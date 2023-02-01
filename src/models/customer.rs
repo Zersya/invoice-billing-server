@@ -12,6 +12,7 @@ pub struct Customer {
     pub updated_at: NaiveDateTime,
     pub deleted_at: Option<NaiveDateTime>,
     pub tags: Vec<String>,
+    pub verified_at: Option<NaiveDateTime>,
 }
 
 #[derive(Serialize, Debug)]
@@ -23,6 +24,7 @@ pub struct CustomerWithContactChannels {
     pub updated_at: NaiveDateTime,
     pub deleted_at: Option<NaiveDateTime>,
     pub tags: Vec<String>,
+    pub verified_at: Option<NaiveDateTime>,
     pub contact_channel_id: Uuid,
     pub contact_channel_value: String,
     pub contact_channel_name: String,
