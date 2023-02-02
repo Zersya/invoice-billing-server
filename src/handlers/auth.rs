@@ -4,7 +4,6 @@ use crate::models::requests::auth::{RequestLogin, RequestRegister};
 use crate::models::responses::DefaultResponse;
 use crate::models::tester::Tester;
 use crate::models::user::User;
-use crate::models::verification::Verification;
 
 use argon2::{self, Config};
 use argon2::{ThreadMode, Variant, Version};
@@ -16,7 +15,7 @@ use reqwest::StatusCode;
 use serde_json::json;
 use sqlx::PgPool;
 
-use super::verification::{send_email_verification, setup_verification};
+use super::verification::{setup_verification};
 
 pub async fn register(State(db): State<PgPool>, Json(payload): Json<RequestRegister>) -> Response {
     let mut extractor = FieldValidator::validate(&payload);

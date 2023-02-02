@@ -3,7 +3,7 @@ use std::ops::Add;
 use axum::http::HeaderValue;
 use chrono::{Duration, Utc};
 use cron::Schedule;
-use lettre::{transport::smtp::authentication::Credentials, SmtpTransport, Message, Transport};
+use lettre::{transport::smtp::authentication::Credentials, Message, SmtpTransport, Transport};
 use rand::Rng;
 use serde_json::Value;
 use sqlx::PgPool;
@@ -15,55 +15,8 @@ use crate::{
         customer_contact_channel::CustomerContactChannel, invoice::Invoice, job_queue::JobQueue,
         job_schedule::JobSchedule,
     },
-    repositories::invoice::send_invoice_to_xendit,
+    repositories::invoice::send_invoice_to_xendit, functions::whatsapp_send_message,
 };
-
-pub async fn whatsapp_send_message(
-    phone_number: &str,
-    message: &str,
-    schedule: &Schedule,
-) -> Result<(), Errors> {
-    let client = reqwest::Client::new();
-
-    let now = Utc::now();
-
-    let schedule = schedule.upcoming(Utc).take(1);
-    let datetime = schedule.last().unwrap();
-
-    if datetime >= now {
-        let host = std::env::var("WHATSAPP_BASE_URL").unwrap();
-        let whatsapp_api_key = std::env::var("WHATSAPP_API_KEY").unwrap();
-
-        let mut headers = reqwest::header::HeaderMap::new();
-        headers.append(
-            "x-whatsapp-api-key",
-            HeaderValue::from_str(&whatsapp_api_key.as_str()).unwrap(),
-        );
-
-        match client
-            .post(format!("{}/api/send", host))
-            .headers(headers)
-            .query(&[("number", phone_number), ("message", message)])
-            .send()
-            .await
-        {
-            Ok(res) => res,
-            Err(_) => {
-                return Err(Errors::new(&[(
-                    "whatsapp_send_message",
-                    "Failed to send message",
-                )]));
-            }
-        };
-
-        return Ok(());
-    }
-
-    Err(Errors::new(&[(
-        "whatsapp_send_message",
-        "Datetime is not yet reached",
-    )]))
-}
 
 pub async fn set_job_schedule_to_queue(pool: PgPool) {
     let job_schedules = match JobSchedule::get_scheduled_jobs(&pool).await {
@@ -222,15 +175,25 @@ pub async fn prepare_via_channels(
 
     for contact_channel in customer_contact_channels.iter() {
         if contact_channel.name == "whatsapp" {
-            match whatsapp_send_message(contact_channel.value.as_str(), message.as_str(), &schedule)
+            let now = Utc::now();
+
+            let schedule = schedule.upcoming(Utc).take(1);
+            let datetime = schedule.last().unwrap();
+
+            if datetime >= now {
+                match whatsapp_send_message(
+                    contact_channel.value.as_str(),
+                    message.as_str(),
+                )
                 .await
-            {
-                Ok(_) => (),
-                Err(_) => {
-                    return Err(Errors::new(&[(
-                        "prepare_via_channels",
-                        "Failed to send message",
-                    )]));
+                {
+                    Ok(_) => (),
+                    Err(_) => {
+                        return Err(Errors::new(&[(
+                            "prepare_via_channels",
+                            "Failed to send message",
+                        )]));
+                    }
                 }
             }
         } else if contact_channel.name == "email" {

@@ -8,7 +8,6 @@ use sqlx::PgPool;
 use uuid::Uuid;
 
 use crate::errors::Errors;
-use crate::logger::Logger;
 use crate::models::contact_channel::ContactChannel;
 use crate::models::customer::Customer;
 use crate::models::customer_contact_channel::CustomerContactChannel;
@@ -17,9 +16,8 @@ use crate::models::requests::customer::{
     RequestCreateCustomer, RequestGetCustomers, RequestUpdateCustomer,
 };
 use crate::models::responses::DefaultResponse;
-use crate::models::verification::Verification;
 
-use super::verification::{send_email_verification, setup_verification};
+use super::verification::{setup_verification};
 
 pub async fn get_by_authenticated_user(
     State(db): State<PgPool>,

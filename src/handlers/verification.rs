@@ -1,11 +1,20 @@
-use axum::{response::{Html}, extract::{Query, State}};
+use axum::{
+    extract::{Query, State},
+    response::Html,
+};
 use lettre::{transport::smtp::authentication::Credentials, Message, SmtpTransport, Transport};
 
 use serde::Deserialize;
 use sqlx::PgPool;
 use validator_derive::Validate;
 
-use crate::{errors::ChannelError, models::{verification::Verification, user::User, customer::Customer, contact_channel::ContactChannel}};
+use crate::{
+    errors::ChannelError,
+    functions::{send_email_verification, whatsapp_send_message},
+    models::{
+        contact_channel::ContactChannel, customer::Customer, user::User, verification::Verification,
+    },
+};
 
 #[derive(Deserialize, Validate, Debug)]
 pub struct VerifyQuery {
@@ -17,7 +26,6 @@ pub async fn auth(
     State(db): State<PgPool>,
     Query(query): Query<VerifyQuery>,
 ) -> Html<&'static str> {
-
     let now = chrono::Utc::now().naive_utc();
 
     if query.id.is_some() {
@@ -32,7 +40,9 @@ pub async fn auth(
 
         if verification.code == query.code {
             if verification.user_id.is_some() {
-                let user = User::get_by_id(&db, verification.user_id.unwrap()).await.unwrap();
+                let user = User::get_by_id(&db, verification.user_id.unwrap())
+                    .await
+                    .unwrap();
 
                 match User::update_verified_at(&db, &user.id, &now).await {
                     Ok(_) => (),
@@ -43,7 +53,9 @@ pub async fn auth(
             }
 
             if verification.customer_id.is_some() {
-                let customer = Customer::get_by_id_only(&db, verification.customer_id.unwrap()).await.unwrap();
+                let customer = Customer::get_by_id_only(&db, verification.customer_id.unwrap())
+                    .await
+                    .unwrap();
 
                 match Customer::update_verified_at(&db, &customer.id, &now).await {
                     Ok(_) => (),
@@ -53,13 +65,13 @@ pub async fn auth(
                 }
             }
 
-            match Verification::update_status(&db, &verification.id, &"verified".to_string()).await {
+            match Verification::update_status(&db, &verification.id, &"verified".to_string()).await
+            {
                 Ok(_) => (),
                 Err(e) => {
                     panic!("Error updating verification status: {}", e)
                 }
             }
-
         }
 
         return Html("<h1>Thank you for verifying your email!</h1>");
@@ -68,7 +80,13 @@ pub async fn auth(
     return Html("<h1>Hello world</h1>");
 }
 
-pub async fn setup_verification(db: &sqlx::PgPool, user_id: Option<uuid::Uuid>, customer_id: Option<uuid::Uuid>, contact_channel_name: String, contact_value: String) -> Result<(), ChannelError> {
+pub async fn setup_verification(
+    db: &sqlx::PgPool,
+    user_id: Option<uuid::Uuid>,
+    customer_id: Option<uuid::Uuid>,
+    contact_channel_name: String,
+    contact_value: String,
+) -> Result<(), ChannelError> {
     let code = rand::Rng::sample_iter(rand::thread_rng(), &rand::distributions::Alphanumeric)
         .take(6)
         .map(char::from)
@@ -126,43 +144,18 @@ pub async fn setup_verification(db: &sqlx::PgPool, user_id: Option<uuid::Uuid>, 
                 });
             }
         };
+    } else if contact_channel_name == "whatsapp" {
+        let message = format!("Hi {}, please verify your account by clicking this link: {}", recepient_name, url_verification);
+        match whatsapp_send_message(contact_value.as_str(), message.as_str()).await {
+            Ok(_) => (),
+            Err(err) => {
+                return Err(ChannelError{
+                    value: "setup verification error".to_string(),
+                    message: err.to_string(),
+                });
+            }
+        }
     }
 
     Ok(())
-
-}
-
-
-pub async fn send_email_verification(
-    name: &String,
-    email_recepient: &String,
-    url_verification: &String,
-) -> Result<(), ChannelError> {
-    let message = format!(
-        "Hello {}, thank you for registering in Inving. Please click this link to verify your account: \n\n{}",
-        name, url_verification, 
-    );
-
-    let email = Message::builder()
-        .from("Verification <hello@inving.co>".parse().unwrap())
-        .to(email_recepient.parse().unwrap())
-        .subject("Inving - Email Verification")
-        .body(message.clone())
-        .unwrap();
-
-    let password = std::env::var("EMAIL_SENDGRID_API_KEY").unwrap();
-    let creds = Credentials::new("apikey".to_string(), password);
-
-    let mailer = SmtpTransport::relay("smtp.sendgrid.net")
-        .unwrap()
-        .credentials(creds)
-        .build();
-
-    match mailer.send(&email) {
-        Ok(_) => Ok(()),
-        Err(e) => Err(ChannelError {
-            value: email_recepient.to_string(),
-            message: e.to_string(),
-        }),
-    }
 }
