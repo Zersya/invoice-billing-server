@@ -227,16 +227,16 @@ pub async fn prepare_via_channels(
 // return random message from vector
 fn generate_message() -> String {
     let messages = [
-        "{} here, as a reminder, we ask that you please make a payment of *{}* to avoid any late fees. The payment can be made at the following link: {}. The due date for this payment is {}.",
-        "{} here, to avoid incurring late fees, we request that you make a payment of *{}* as soon as possible. You can easily do so by following this payment link: {}. The deadline for this payment is {}.",
-        "{} here, we strongly encourage you to make a payment of *{}* by the due date of {} to avoid late fees. You can make the payment by clicking on the following link: {}.",
-        "{} here, to avoid being charged late fees, we request that you make a payment of *{}* by {}. You can access the payment link here: {}.",
-        "{} here, please make a payment of *{}* by the due date of {} to avoid late fees. You can make the payment at the following link: {}.",
-        "{} here, we request that you make a payment of *{}* as soon as possible to avoid any late fees. The payment link can be found here: {}. Please note that the payment is due on {}.",
-        "{} here, to avoid late fees, we ask that you make a payment of *{}* by the due date of {}. You can make the payment using the following link: {}.",
-        "{} here, as a reminder, a payment of *{}* is due on {} to avoid late fees. You can make the payment at the following link: {}.",
-        "{} here, we request that you make a payment of *{}* by {} to avoid any late fees. The payment link is available here: {}.",
-        "{} here, to avoid being charged late fees, we ask that you make a payment of *{}* as soon as possible. The payment link is provided here: {}. Please note that the payment is due on {}.",
+        "Hello {}, {} here, as a reminder, we ask that you please make a payment of *{}* to avoid any late fees. The payment can be made at the following link: {}. The due date for this payment is {}.",
+        "Hello {}, {} here, to avoid incurring late fees, we request that you make a payment of *{}* as soon as possible. You can easily do so by following this payment link: {}. The deadline for this payment is {}.",
+        "Hello {}, {} here, we strongly encourage you to make a payment of *{}* by the due date of {} to avoid late fees. You can make the payment by clicking on the following link: {}.",
+        "Hello {}, {} here, to avoid being charged late fees, we request that you make a payment of *{}* by {}. You can access the payment link here: {}.",
+        "Hello {}, {} here, please make a payment of *{}* by the due date of {} to avoid late fees. You can make the payment at the following link: {}.",
+        "Hello {}, {} here, we request that you make a payment of *{}* as soon as possible to avoid any late fees. The payment link can be found here: {}. Please note that the payment is due on {}.",
+        "Hello {}, {} here, to avoid late fees, we ask that you make a payment of *{}* by the due date of {}. You can make the payment using the following link: {}.",
+        "Hello {}, {} here, as a reminder, a payment of *{}* is due on {} to avoid late fees. You can make the payment at the following link: {}.",
+        "Hello {}, {} here, we request that you make a payment of *{}* by {} to avoid any late fees. The payment link is available here: {}.",
+        "Hello {}, {} here, to avoid being charged late fees, we ask that you make a payment of *{}* as soon as possible. The payment link is provided here: {}. Please note that the payment is due on {}.",
     ];
 
     let random_number = rand::thread_rng().gen_range(0..10);
@@ -347,6 +347,16 @@ async fn message_builder_invoice(
         }
     };
 
+    let customer_name = match job_data["customer_name"].as_str() {
+        Some(customer_name) => customer_name,
+        None => {
+            return Err(Errors::new(&[(
+                "message_builder_reminder",
+                "Failed to prepare reminder",
+            )]));
+        }
+    };
+
     let xendit_invoice_payload = invoice.xendit_invoice_payload.unwrap();
     let invoice_url = xendit_invoice_payload["invoice_url"].as_str().unwrap();
 
@@ -358,6 +368,7 @@ async fn message_builder_invoice(
 
     let msg = generate_message();
 
+    let msg = msg.replacen("{}", &customer_name, 1);
     let msg = msg.replacen("{}", &merchant_name, 1);
     let msg = msg.replacen("{}", &total_amount, 1);
     let msg = msg.replacen("{}", &invoice_url, 1);
@@ -387,8 +398,19 @@ fn message_builder_reminder(job_data: Value, merchant_name: &str) -> Result<Stri
         }
     };
 
-    let msg = "{} here, we have a message for you \"{}\", \"{}\".".to_string();
+    let customer_name = match job_data["customer_name"].as_str() {
+        Some(customer_name) => customer_name,
+        None => {
+            return Err(Errors::new(&[(
+                "message_builder_reminder",
+                "Failed to prepare reminder",
+            )]));
+        }
+    };
 
+    let msg = "Hello {}, {} here, we have a message for you \"{}\", \"{}\".".to_string();
+
+    let msg = msg.replacen("{}", &customer_name, 1);
     let msg = msg.replacen("{}", &merchant_name, 1);
     let msg = msg.replacen("{}", &title, 1);
     let msg = msg.replacen("{}", &description, 1);
