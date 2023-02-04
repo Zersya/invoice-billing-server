@@ -311,64 +311,6 @@
     },
     "query": "\n            UPDATE job_queues\n            SET status = $1\n            WHERE job_data->>'invoice_id' = $2 AND job_data->>'created_by' = $3\n            RETURNING *\n            "
   },
-  "114716e6849acf262768677d2b4c230a6c4cc2dc6795b09b295ca1589004e3ca": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "name",
-          "ordinal": 1,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "description",
-          "ordinal": 2,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "user_id",
-          "ordinal": 3,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "created_at",
-          "ordinal": 4,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "updated_at",
-          "ordinal": 5,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "deleted_at",
-          "ordinal": 6,
-          "type_info": "Timestamp"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        true
-      ],
-      "parameters": {
-        "Left": [
-          "Varchar",
-          "Varchar",
-          "Uuid"
-        ]
-      }
-    },
-    "query": "\n            INSERT INTO merchants (name, description, user_id)\n            VALUES ($1, $2, $3)\n            RETURNING *\n            "
-  },
   "14f960cede089914d57121a86e707743ae60c2946d900a5072956599f4017953": {
     "describe": {
       "columns": [
@@ -451,65 +393,6 @@
       }
     },
     "query": "\n            SELECT COUNT(*) as count\n            FROM oauth_access_tokens\n            WHERE user_id = $1\n            "
-  },
-  "1b233e2c6e787721abcbc25f5ac107602f14b816e8f6b6a1d7ce6728385523a8": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "name",
-          "ordinal": 1,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "description",
-          "ordinal": 2,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "user_id",
-          "ordinal": 3,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "created_at",
-          "ordinal": 4,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "updated_at",
-          "ordinal": 5,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "deleted_at",
-          "ordinal": 6,
-          "type_info": "Timestamp"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        true
-      ],
-      "parameters": {
-        "Left": [
-          "Varchar",
-          "Varchar",
-          "Uuid",
-          "Uuid"
-        ]
-      }
-    },
-    "query": "\n            UPDATE merchants\n            SET name = $1, description = $2\n            WHERE id = $3 AND user_id = $4 AND deleted_at IS NULL\n            RETURNING *\n            "
   },
   "22fe19b03d44015c52aa501a2fd67ba89b7b47782937d1a6eeaa055f04331975": {
     "describe": {
@@ -2212,6 +2095,93 @@
     },
     "query": "\n            SELECT * FROM job_queues\n            WHERE job_schedule_id = $1 AND status != 'completed'\n            "
   },
+  "85cb39e586bdb21e68a25249434e0e05b4382afac71329cd0567d7595ada6438": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "name",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "description",
+          "ordinal": 2,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "user_id",
+          "ordinal": 3,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 4,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 5,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "deleted_at",
+          "ordinal": 6,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "address",
+          "ordinal": 7,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "phone_country_code",
+          "ordinal": 8,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "phone_number",
+          "ordinal": 9,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "tax",
+          "ordinal": 10,
+          "type_info": "Numeric"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "Varchar",
+          "Varchar",
+          "Varchar",
+          "Varchar",
+          "Numeric",
+          "Uuid",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n            UPDATE merchants\n            SET name = $1, description = $2, address = $3, phone_country_code = $4, phone_number = $5, tax = $6\n            WHERE id = $7 AND user_id = $8 AND deleted_at IS NULL\n            RETURNING *\n            "
+  },
   "8ccc9e8ecbf60e7e342e672e98801571ab1649e60f4636cb7d2edfce6e6ca9b2": {
     "describe": {
       "columns": [
@@ -2595,6 +2565,26 @@
           "name": "deleted_at",
           "ordinal": 6,
           "type_info": "Timestamp"
+        },
+        {
+          "name": "address",
+          "ordinal": 7,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "phone_country_code",
+          "ordinal": 8,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "phone_number",
+          "ordinal": 9,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "tax",
+          "ordinal": 10,
+          "type_info": "Numeric"
         }
       ],
       "nullable": [
@@ -2604,6 +2594,10 @@
         false,
         false,
         false,
+        true,
+        true,
+        true,
+        true,
         true
       ],
       "parameters": {
@@ -2651,6 +2645,26 @@
           "name": "deleted_at",
           "ordinal": 6,
           "type_info": "Timestamp"
+        },
+        {
+          "name": "address",
+          "ordinal": 7,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "phone_country_code",
+          "ordinal": 8,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "phone_number",
+          "ordinal": 9,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "tax",
+          "ordinal": 10,
+          "type_info": "Numeric"
         }
       ],
       "nullable": [
@@ -2660,6 +2674,10 @@
         false,
         false,
         false,
+        true,
+        true,
+        true,
+        true,
         true
       ],
       "parameters": {
@@ -3235,6 +3253,26 @@
           "name": "deleted_at",
           "ordinal": 6,
           "type_info": "Timestamp"
+        },
+        {
+          "name": "address",
+          "ordinal": 7,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "phone_country_code",
+          "ordinal": 8,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "phone_number",
+          "ordinal": 9,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "tax",
+          "ordinal": 10,
+          "type_info": "Numeric"
         }
       ],
       "nullable": [
@@ -3244,6 +3282,10 @@
         false,
         false,
         false,
+        true,
+        true,
+        true,
+        true,
         true
       ],
       "parameters": {
@@ -3673,6 +3715,92 @@
       }
     },
     "query": "\n            SELECT *\n            FROM verifications\n            WHERE user_id = $1\n            AND status = 'pending'\n            AND deleted_at IS NULL\n            "
+  },
+  "e020ebbcc2cd21f044c8733f7736b36e44d796014a9fbb74c46f53295d4df433": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "name",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "description",
+          "ordinal": 2,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "user_id",
+          "ordinal": 3,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 4,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 5,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "deleted_at",
+          "ordinal": 6,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "address",
+          "ordinal": 7,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "phone_country_code",
+          "ordinal": 8,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "phone_number",
+          "ordinal": 9,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "tax",
+          "ordinal": 10,
+          "type_info": "Numeric"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "Varchar",
+          "Uuid",
+          "Varchar",
+          "Varchar",
+          "Varchar",
+          "Numeric"
+        ]
+      }
+    },
+    "query": "\n            INSERT INTO merchants (name, description, user_id, address, phone_country_code, phone_number, tax)\n            VALUES ($1, $2, $3, $4, $5, $6, $7)\n            RETURNING *\n            "
   },
   "e466919aedad9eababc593ccfe894fc1a78d74e49f7450434f3ec81dad847642": {
     "describe": {

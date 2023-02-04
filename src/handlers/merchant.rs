@@ -1,3 +1,4 @@
+use crate::errors::FieldValidator;
 use crate::models::job_schedule::JobSchedule;
 use crate::models::merchant::Merchant;
 use crate::models::requests::merchant::RequestUpdateMerchant;
@@ -37,22 +38,18 @@ pub async fn create(
     Extension(user_id): Extension<Uuid>,
     Json(body): Json<RequestCreateMerchant>,
 ) -> Response {
-    if body.name.is_empty() {
-        let body = DefaultResponse::error("name is required", "name is empty".to_string())
-            .into_json();
+    let mut extractor = FieldValidator::validate(&body);
 
-        return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+    let name = extractor.extract("name", body.name);
+    let description = extractor.extract("description", body.description);
+    let address = extractor.extract("address", Some(body.address));
+    let phone_number = extractor.extract("phone_number", Some(body.phone_number));
+    match extractor.check() {
+        Ok(_) => (),
+        Err(err) => return (StatusCode::UNPROCESSABLE_ENTITY, err.into_response()).into_response(),
     }
 
-    if body.description.is_empty() {
-        let body = DefaultResponse::error("description is required", "description is empty".to_string())
-            .into_json();
-
-        return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
-    }
-
-
-    let merchant = match Merchant::create(&db, &body.name, &body.description, &user_id).await {
+    let merchant = match Merchant::create(&db, &name, &description, &user_id, address, body.phone_country_code, phone_number, body.tax).await {
         Ok(merchant) => merchant,
         Err(err) => {
             let body =
@@ -75,8 +72,19 @@ pub async fn update(
     Path((merchant_id,)): Path<(Uuid,)>,
     Json(body): Json<RequestUpdateMerchant>,
 ) -> Response {
+    let mut extractor = FieldValidator::validate(&body);
+
+    let name = extractor.extract("name", body.name);
+    let description = extractor.extract("description", body.description);
+    let address = extractor.extract("address", Some(body.address));
+    let phone_number = extractor.extract("phone_number", Some(body.phone_number));
+    match extractor.check() {
+        Ok(_) => (),
+        Err(err) => return (StatusCode::UNPROCESSABLE_ENTITY, err.into_response()).into_response(),
+    }
+
     let merchant =
-        match Merchant::update(&db, merchant_id, &body.name, &body.description, &user_id).await {
+        match Merchant::update(&db, merchant_id, &name, &description, &user_id, address, body.phone_country_code, phone_number, body.tax).await {
             Ok(merchant) => merchant,
             Err(err) => {
                 let body =

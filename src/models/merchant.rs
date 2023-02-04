@@ -1,4 +1,5 @@
 use chrono::NaiveDateTime;
+use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -11,6 +12,10 @@ pub struct Merchant {
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
     pub deleted_at: Option<NaiveDateTime>,
+    pub address: Option<String>,
+    pub phone_country_code: Option<String>,
+    pub phone_number: Option<String>,
+    pub tax: Option<Decimal>
 }
 
 impl Merchant {
@@ -19,17 +24,25 @@ impl Merchant {
         name: &String,
         description: &String,
         user_id: &Uuid,
+        address: Option<String>,
+        phone_country_code: Option<String>,
+        phone_number: Option<String>,
+        tax: Option<Decimal>
     ) -> Result<Merchant, sqlx::Error> {
         let merchant = sqlx::query_as!(
             Merchant,
             r#"
-            INSERT INTO merchants (name, description, user_id)
-            VALUES ($1, $2, $3)
+            INSERT INTO merchants (name, description, user_id, address, phone_country_code, phone_number, tax)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
             RETURNING *
             "#,
             name,
             description,
-            user_id
+            user_id,
+            address,
+            phone_country_code,
+            phone_number,
+            tax
         )
         .fetch_one(db)
         .await?;
@@ -43,19 +56,27 @@ impl Merchant {
         name: &String,
         description: &String,
         user_id: &Uuid,
+        address: Option<String>,
+        phone_country_code: Option<String>,
+        phone_number: Option<String>,
+        tax: Option<Decimal>
     ) -> Result<Merchant, sqlx::Error> {
         let merchant = sqlx::query_as!(
             Merchant,
             r#"
             UPDATE merchants
-            SET name = $1, description = $2
-            WHERE id = $3 AND user_id = $4 AND deleted_at IS NULL
+            SET name = $1, description = $2, address = $3, phone_country_code = $4, phone_number = $5, tax = $6
+            WHERE id = $7 AND user_id = $8 AND deleted_at IS NULL
             RETURNING *
             "#,
             name,
             description,
+            address,
+            phone_country_code,
+            phone_number,
+            tax,
             id,
-            user_id
+            user_id,
         )
         .fetch_one(db)
         .await?;
