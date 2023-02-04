@@ -38,6 +38,10 @@ pub async fn auth(
             return Html("<h1>Verification link has expired</h1>");
         }
 
+        if verification.status == "verified" {
+            return Html("<h1>Verification link has already been used</h1>");
+        }
+
         if verification.code == query.code {
             if verification.user_id.is_some() {
                 let user = User::get_by_id(&db, verification.user_id.unwrap())
@@ -74,7 +78,7 @@ pub async fn auth(
             }
         }
 
-        return Html("<h1>Thank you for verifying your email!</h1>");
+        return Html("<h1>Thank you for verifying!</h1>");
     }
 
     return Html("<h1>Hello world</h1>");
