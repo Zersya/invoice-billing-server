@@ -23,6 +23,8 @@ processes = []
   PG_POOLMINSIZE="15"
   PG_POOLMAXSIZE="30"
 
+  EMAIL_SENDGRID_API_KEY="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"
+
   WHATSAPP_API_KEY="YOUR_API_KEY"
   WHATSAPP_BASE_URL="https://simple-whatsapp-api.fly.dev"
 

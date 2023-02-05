@@ -12,7 +12,8 @@ pub struct RequestCreateMerchant {
     pub phone_country_code: Option<String>,
     #[validate(length(min = 11, max = 15))]
     pub phone_number: Option<String>,
-    pub tax: Option<rust_decimal::Decimal>,
+    #[validate(range(min = 0.0, max = 1))]
+    pub tax: Option<f32>,
 }
 
 #[derive(Deserialize, Validate, Debug)]
@@ -26,5 +27,5 @@ pub struct RequestUpdateMerchant {
     pub phone_country_code: Option<String>,
     #[validate(length(min = 11, max = 15))]
     pub phone_number: Option<String>,
-    pub tax: Option<rust_decimal::Decimal>,
+    pub tax: Option<f32>,
 }

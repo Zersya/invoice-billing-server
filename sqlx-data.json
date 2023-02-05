@@ -2151,7 +2151,7 @@
         {
           "name": "tax",
           "ordinal": 10,
-          "type_info": "Numeric"
+          "type_info": "Float4"
         }
       ],
       "nullable": [
@@ -2174,7 +2174,7 @@
           "Varchar",
           "Varchar",
           "Varchar",
-          "Numeric",
+          "Float4",
           "Uuid",
           "Uuid"
         ]
@@ -2584,7 +2584,7 @@
         {
           "name": "tax",
           "ordinal": 10,
-          "type_info": "Numeric"
+          "type_info": "Float4"
         }
       ],
       "nullable": [
@@ -2664,7 +2664,7 @@
         {
           "name": "tax",
           "ordinal": 10,
-          "type_info": "Numeric"
+          "type_info": "Float4"
         }
       ],
       "nullable": [
@@ -3272,7 +3272,7 @@
         {
           "name": "tax",
           "ordinal": 10,
-          "type_info": "Numeric"
+          "type_info": "Float4"
         }
       ],
       "nullable": [
@@ -3772,7 +3772,7 @@
         {
           "name": "tax",
           "ordinal": 10,
-          "type_info": "Numeric"
+          "type_info": "Float4"
         }
       ],
       "nullable": [
@@ -3796,7 +3796,7 @@
           "Varchar",
           "Varchar",
           "Varchar",
-          "Numeric"
+          "Float4"
         ]
       }
     },

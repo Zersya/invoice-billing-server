@@ -1,5 +1,4 @@
 use chrono::NaiveDateTime;
-use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -15,7 +14,7 @@ pub struct Merchant {
     pub address: Option<String>,
     pub phone_country_code: Option<String>,
     pub phone_number: Option<String>,
-    pub tax: Option<Decimal>
+    pub tax: Option<f32>
 }
 
 impl Merchant {
@@ -27,7 +26,7 @@ impl Merchant {
         address: Option<String>,
         phone_country_code: Option<String>,
         phone_number: Option<String>,
-        tax: Option<Decimal>
+        tax: Option<f32>
     ) -> Result<Merchant, sqlx::Error> {
         let merchant = sqlx::query_as!(
             Merchant,
@@ -59,7 +58,7 @@ impl Merchant {
         address: Option<String>,
         phone_country_code: Option<String>,
         phone_number: Option<String>,
-        tax: Option<Decimal>
+        tax: Option<f32>
     ) -> Result<Merchant, sqlx::Error> {
         let merchant = sqlx::query_as!(
             Merchant,
