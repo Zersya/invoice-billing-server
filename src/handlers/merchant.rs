@@ -44,12 +44,13 @@ pub async fn create(
     let description = extractor.extract("description", body.description);
     let address = extractor.extract("address", Some(body.address));
     let phone_number = extractor.extract("phone_number", Some(body.phone_number));
+    let tax = extractor.extract("tax", Some(body.tax));
     match extractor.check() {
         Ok(_) => (),
         Err(err) => return (StatusCode::UNPROCESSABLE_ENTITY, err.into_response()).into_response(),
     }
 
-    let merchant = match Merchant::create(&db, &name, &description, &user_id, address, body.phone_country_code, phone_number, body.tax).await {
+    let merchant = match Merchant::create(&db, &name, &description, &user_id, address, body.phone_country_code, phone_number, tax).await {
         Ok(merchant) => merchant,
         Err(err) => {
             let body =
@@ -78,13 +79,14 @@ pub async fn update(
     let description = extractor.extract("description", body.description);
     let address = extractor.extract("address", Some(body.address));
     let phone_number = extractor.extract("phone_number", Some(body.phone_number));
+    let tax = extractor.extract("tax", Some(body.tax));
     match extractor.check() {
         Ok(_) => (),
         Err(err) => return (StatusCode::UNPROCESSABLE_ENTITY, err.into_response()).into_response(),
     }
 
     let merchant =
-        match Merchant::update(&db, merchant_id, &name, &description, &user_id, address, body.phone_country_code, phone_number, body.tax).await {
+        match Merchant::update(&db, merchant_id, &name, &description, &user_id, address, body.phone_country_code, phone_number, tax).await {
             Ok(merchant) => merchant,
             Err(err) => {
                 let body =
