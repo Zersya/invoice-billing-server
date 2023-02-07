@@ -24,7 +24,6 @@ processes = []
   PG_POOLMAXSIZE="30"
 
   REDIS_CONNECTION="redis://default:23f50333cef84eea8ab1d6dc51c86540@fly-divine-river-2631.upstash.io"
-  REDIS_PASSWORD="aHyT82DjqQe5hcKc"
 
   EMAIL_SENDGRID_API_KEY="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"
   TELEGRAM_SECRET_TOKEN="gaTGUZkEWm5moChKV4jg"

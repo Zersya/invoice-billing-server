@@ -14,11 +14,13 @@ pub async fn telegram(
     Json(payload): Json<TelegramUpdateItem>,
 ) -> Response {
     let secret_token = std::env::var("TELEGRAM_SECRET_TOKEN").unwrap();
+    let mut is_has_secret_token = false;
 
     for (key, value) in headers {
         if key == "x-telegram-bot-api-secret-token" {
+            is_has_secret_token = true;
             if value != secret_token {
-                let body = DefaultResponse::ok("invalid secret token").into_json();
+                let body = DefaultResponse::error("invalid secret token", "invalid secret token".to_string()).into_json();
 
                 return (StatusCode::BAD_REQUEST, body).into_response();
             }
@@ -27,11 +29,17 @@ pub async fn telegram(
         }
     }
 
+    if !is_has_secret_token {
+        let body = DefaultResponse::error("no secret token found", "no secret token found".to_string()).into_json();
+
+        return (StatusCode::BAD_REQUEST, body).into_response();
+    }
+
     let redis_connection = std::env::var("REDIS_CONNECTION").unwrap();
     let client = match redis::Client::open(redis_connection) {
         Ok(client) => client,
-        Err(_) => {
-            let body = DefaultResponse::ok("unable to connect to redis").into_json();
+        Err(err) => {
+            let body = DefaultResponse::error("unable to connect to redis", err.to_string()).into_json();
 
             return (StatusCode::BAD_REQUEST, body).into_response();
         }
@@ -110,27 +118,44 @@ pub async fn telegram(
                 return (StatusCode::BAD_REQUEST, body).into_response();
             }
         };
-    } else {
-        let current_text = match cmd("GET").arg(&key).query::<Option<String>>(&mut con) {
-            Ok(current_text) => current_text,
+    } else if payload.message.text == "/clear" {
+        match cmd("DEL").arg(&key).query::<Option<()>>(&mut con) {
+            Ok(_) => Some(()),
+            Err(_) => None,
+        };
+
+        let body = json!({
+            "chat_id": payload.message.chat.id,
+            "text": "Send /connect to connect to the merchant",
+        });
+
+        match client
+            .post(format!("{}/bot{}/sendMessage", host, telegram_bot_token))
+            .json(&body)
+            .send()
+            .await
+        {
+            Ok(res) => res,
             Err(err) => {
-                let body = DefaultResponse::error("unable to get redis value", err.to_string())
-                    .into_json();
+                let body =
+                    DefaultResponse::error("unable to send telegram request", err.to_string())
+                        .into_json();
 
                 return (StatusCode::BAD_REQUEST, body).into_response();
             }
         };
+    }
+    
+    else {
+        let current_text = match cmd("GET").arg(&key).query::<Option<String>>(&mut con) {
+            Ok(current_text) => current_text,
+            Err(_) => None,
+        };
 
         if current_text.is_some() && current_text.unwrap() == "/connect" {
-            match cmd("DEL").arg(&key).query::<()>(&mut con) {
-                Ok(result) => result,
-                Err(err) => {
-                    let body =
-                        DefaultResponse::error("unable to set value to redis", err.to_string())
-                            .into_json();
-
-                    return (StatusCode::BAD_REQUEST, body).into_response();
-                }
+            match cmd("DEL").arg(&key).query::<Option<()>>(&mut con) {
+                Ok(_) => Some(()),
+                Err(_) => None,
             };
 
             let body = json!({
