@@ -2,8 +2,6 @@ use axum::{
     extract::{Query, State},
     response::Html,
 };
-use lettre::{transport::smtp::authentication::Credentials, Message, SmtpTransport, Transport};
-
 use serde::Deserialize;
 use sqlx::PgPool;
 use validator_derive::Validate;
@@ -11,9 +9,7 @@ use validator_derive::Validate;
 use crate::{
     errors::ChannelError,
     functions::{send_email_verification, whatsapp_send_message},
-    models::{
-        contact_channel::ContactChannel, customer::Customer, user::User, verification::Verification,
-    },
+    models::{customer::Customer, user::User, verification::Verification},
 };
 
 #[derive(Deserialize, Validate, Debug)]

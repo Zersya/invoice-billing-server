@@ -29,9 +29,9 @@ mod utils;
 mod functions;
 
 pub async fn axum() {
-    tracing_subscriber::registry()
-        .with(tracing_subscriber::fmt::layer())
-        .init();
+    // tracing_subscriber::registry()
+    //     .with(tracing_subscriber::fmt::layer())
+    //     .init();
 
     dotenv().ok();
 
@@ -55,15 +55,18 @@ pub async fn axum() {
         pool.clone(),
         middlewares::authentication::check_authentication,
     );
-
     let merchant_middleware =
         axum::middleware::from_fn_with_state(pool.clone(), middlewares::merchant::check_merchant);
+
+    let check_headers =
+        axum::middleware::from_fn(middlewares::headers::check_headers);
 
     let origins = [
         "http://localhost:5173".parse().unwrap(),
         "http://maresto.id".parse().unwrap(),
         "http://inving.id".parse().unwrap(),
         "http://vercel.app".parse().unwrap(),
+        "https://api.telegram.org".parse().unwrap(),
     ];
 
     let app = Router::with_state(pool.clone())
@@ -133,6 +136,8 @@ pub async fn axum() {
         .route("/login", post(handlers::auth::login))
         .route("/register", post(handlers::auth::register))
         .route("/verify", get(handlers::verification::auth))
+        .route("/webhook/telegram", post(handlers::webhook::telegram))
+        .route_layer(check_headers)
         .route("/", get(handlers::user::hello_world))
         .layer(
             CorsLayer::new()
@@ -151,7 +156,7 @@ pub async fn axum() {
     let port = &config.server.as_ref().unwrap().port;
     let addr = format!("{}:{}", host, port).parse::<SocketAddr>().unwrap();
 
-    tracing::debug!("listening on {}", addr);
+    // tracing::debug!("listening on {}", addr);
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await
