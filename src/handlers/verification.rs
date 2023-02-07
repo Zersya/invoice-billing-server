@@ -7,9 +7,9 @@ use sqlx::PgPool;
 use validator_derive::Validate;
 
 use crate::{
-    errors::ChannelError,
-    functions::{send_email_verification, whatsapp_send_message},
-    models::{customer::Customer, user::User, verification::Verification},
+    errors::DefaultError,
+    functions::{send_email_verification},
+    models::{customer::Customer, user::User, verification::Verification}, repositories::{whatsapp::whatsapp_send_message, telegram::telegram_send_message},
 };
 
 #[derive(Deserialize, Validate, Debug)]
@@ -86,7 +86,7 @@ pub async fn setup_verification(
     customer_id: Option<uuid::Uuid>,
     contact_channel_name: String,
     contact_value: String,
-) -> Result<(), ChannelError> {
+) -> Result<(), DefaultError> {
     let code = rand::Rng::sample_iter(rand::thread_rng(), &rand::distributions::Alphanumeric)
         .take(6)
         .map(char::from)
@@ -95,7 +95,7 @@ pub async fn setup_verification(
     let verification = match Verification::create(&db, user_id, customer_id, &code).await {
         Ok(verification) => verification,
         Err(err) => {
-            return Err(ChannelError {
+            return Err(DefaultError {
                 value: "setup verification error".to_string(),
                 message: err.to_string(),
             });
@@ -104,7 +104,7 @@ pub async fn setup_verification(
 
     let base_url = std::env::var("APP_HOST").unwrap();
     let url_verification = format!(
-        "http://{}/verify?code={}&id={}",
+            "http://{}/verify?code={}&id={}",
         base_url, code, verification.id
     );
 
@@ -112,7 +112,7 @@ pub async fn setup_verification(
         let user = match User::get_by_id(&db, user_id.unwrap()).await {
             Ok(user) => user,
             Err(err) => {
-                return Err(ChannelError {
+                return Err(DefaultError {
                     value: "setup verification error".to_string(),
                     message: err.to_string(),
                 });
@@ -124,7 +124,7 @@ pub async fn setup_verification(
         let customer = match Customer::get_by_id_only(&db, customer_id.unwrap()).await {
             Ok(customer) => customer,
             Err(err) => {
-                return Err(ChannelError {
+                return Err(DefaultError {
                     value: "setup verification error".to_string(),
                     message: err.to_string(),
                 });
@@ -138,7 +138,7 @@ pub async fn setup_verification(
         match send_email_verification(&recepient_name, &contact_value, &url_verification).await {
             Ok(_) => (),
             Err(err) => {
-                return Err(ChannelError {
+                return Err(DefaultError {
                     value: "setup verification error".to_string(),
                     message: err.to_string(),
                 });
@@ -149,7 +149,20 @@ pub async fn setup_verification(
         match whatsapp_send_message(contact_value.as_str(), message.as_str()).await {
             Ok(_) => (),
             Err(err) => {
-                return Err(ChannelError{
+                return Err(DefaultError{
+                    value: "setup verification error".to_string(),
+                    message: err.to_string(),
+                });
+            }
+        }
+    } else if contact_channel_name == "telegram" {
+        let message = format!("Hi {}, please verify your account by clicking this link: {}", recepient_name, url_verification);
+        let parsed_chat_id = contact_value.parse::<i64>().expect("format contact value invalid");
+
+        match telegram_send_message(&parsed_chat_id, message.as_str()).await {
+            Ok(_) => (),
+            Err(err) => {
+                return Err(DefaultError{
                     value: "setup verification error".to_string(),
                     message: err.to_string(),
                 });

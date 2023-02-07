@@ -8,12 +8,12 @@ use validator::{Validate, ValidationError, ValidationErrors, ValidationErrorsKin
 
 use crate::models::responses::{DefaultResponse, Message};
 
-pub struct ChannelError {
+pub struct DefaultError {
     pub value: String,
     pub message: String,
 }
 
-impl ChannelError {
+impl DefaultError {
     pub fn new(value: String, message: String) -> Self {
         Self { value, message }
     }

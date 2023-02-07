@@ -56,7 +56,7 @@ pub async fn get_by_merchant_id(
         None => Vec::new(),
     };
 
-    let customers = match Customer::get_by_merchant_id(&db, &merchant_id, &tags).await {
+    let customers = match Customer::get_by_merchant_id_tags(&db, &merchant_id, &tags).await {
         Ok(customers) => customers,
         Err(err) => {
             let body = DefaultResponse::error("get customers failed", err.to_string()).into_json();

@@ -123,7 +123,7 @@ impl Customer {
         Ok(customers)
     }
 
-    pub async fn get_by_merchant_id(
+    pub async fn get_by_merchant_id_tags(
         db: &sqlx::PgPool,
         merchant_id: &Uuid,
         tags: &Vec<String>,
@@ -152,6 +152,40 @@ impl Customer {
         .await?;
 
         Ok(customers)
+    }
+
+    pub async fn get_by_merchant_id_contact_channel(
+        db: &sqlx::PgPool,
+        merchant_id: &Uuid,
+        contact_channel_name: &String,
+        customer_contact_channel_value: &String,
+    ) -> Result<CustomerWithContactChannels, sqlx::Error> {
+        let customer = sqlx::query_as!(
+                CustomerWithContactChannels,
+            r#"
+             SELECT
+            	customers.*,
+            	customer_contact_channels.contact_channel_id AS contact_channel_id,
+            	customer_contact_channels.value AS contact_channel_value,
+            	contact_channels.name AS contact_channel_name
+            FROM
+            	customers
+            	INNER JOIN customer_contact_channels ON customer_contact_channels.customer_id = customers.id
+            	INNER JOIN contact_channels ON contact_channels.id = customer_contact_channels.contact_channel_id
+            WHERE
+            	merchant_id = $1
+            	AND contact_channels.name = $2
+            	AND customer_contact_channels.value = $3
+            	AND customers.deleted_at IS NULL
+            "#,
+            merchant_id,
+            contact_channel_name,
+            customer_contact_channel_value
+        )
+        .fetch_one(db)
+        .await?;
+
+        Ok(customer)
     }
 
     pub async fn get_by_id_only(db: &sqlx::PgPool, id: Uuid) -> Result<Customer, sqlx::Error> {

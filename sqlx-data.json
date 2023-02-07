@@ -2152,6 +2152,11 @@
           "name": "tax",
           "ordinal": 10,
           "type_info": "Float4"
+        },
+        {
+          "name": "merchant_code",
+          "ordinal": 11,
+          "type_info": "Varchar"
         }
       ],
       "nullable": [
@@ -2161,6 +2166,7 @@
         false,
         false,
         false,
+        true,
         true,
         true,
         true,
@@ -2201,6 +2207,92 @@
       }
     },
     "query": "\n            SELECT DISTINCT unnest(tags) as tag\n            FROM customers\n            WHERE merchant_id = $1 AND deleted_at IS NULL\n            "
+  },
+  "8dbe59333f161358d90ca125fae12eafe8de160b57e48157ec2d918658151425": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "name",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "description",
+          "ordinal": 2,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "user_id",
+          "ordinal": 3,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 4,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 5,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "deleted_at",
+          "ordinal": 6,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "address",
+          "ordinal": 7,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "phone_country_code",
+          "ordinal": 8,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "phone_number",
+          "ordinal": 9,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "tax",
+          "ordinal": 10,
+          "type_info": "Float4"
+        },
+        {
+          "name": "merchant_code",
+          "ordinal": 11,
+          "type_info": "Varchar"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "\n            SELECT * FROM merchants\n            WHERE merchant_code = $1 AND deleted_at IS NULL\n            "
   },
   "91ffb01ec372ce3eeb8b196ba20b2e097df105a002df3df51c8e5a2140ac6b83": {
     "describe": {
@@ -2585,6 +2677,11 @@
           "name": "tax",
           "ordinal": 10,
           "type_info": "Float4"
+        },
+        {
+          "name": "merchant_code",
+          "ordinal": 11,
+          "type_info": "Varchar"
         }
       ],
       "nullable": [
@@ -2594,6 +2691,7 @@
         false,
         false,
         false,
+        true,
         true,
         true,
         true,
@@ -2665,6 +2763,11 @@
           "name": "tax",
           "ordinal": 10,
           "type_info": "Float4"
+        },
+        {
+          "name": "merchant_code",
+          "ordinal": 11,
+          "type_info": "Varchar"
         }
       ],
       "nullable": [
@@ -2674,6 +2777,7 @@
         false,
         false,
         false,
+        true,
         true,
         true,
         true,
@@ -3273,6 +3377,11 @@
           "name": "tax",
           "ordinal": 10,
           "type_info": "Float4"
+        },
+        {
+          "name": "merchant_code",
+          "ordinal": 11,
+          "type_info": "Varchar"
         }
       ],
       "nullable": [
@@ -3282,6 +3391,7 @@
         false,
         false,
         false,
+        true,
         true,
         true,
         true,
@@ -3773,6 +3883,11 @@
           "name": "tax",
           "ordinal": 10,
           "type_info": "Float4"
+        },
+        {
+          "name": "merchant_code",
+          "ordinal": 11,
+          "type_info": "Varchar"
         }
       ],
       "nullable": [
@@ -3782,6 +3897,7 @@
         false,
         false,
         false,
+        true,
         true,
         true,
         true,
@@ -4291,6 +4407,88 @@
       }
     },
     "query": "\n            UPDATE invoices\n            SET xendit_invoice_payload = $1\n            WHERE id = $2\n            RETURNING *\n            "
+  },
+  "f4002e56c47e9d44bdb94c8c6b346efc8f2dc80d208e5d7d49555b57bbcc2fe0": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "name",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "merchant_id",
+          "ordinal": 2,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 3,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 4,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "deleted_at",
+          "ordinal": 5,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "tags",
+          "ordinal": 6,
+          "type_info": "TextArray"
+        },
+        {
+          "name": "verified_at",
+          "ordinal": 7,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "contact_channel_id",
+          "ordinal": 8,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "contact_channel_value",
+          "ordinal": 9,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "contact_channel_name",
+          "ordinal": 10,
+          "type_info": "Varchar"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        true,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Text",
+          "Text"
+        ]
+      }
+    },
+    "query": "\n             SELECT\n            \tcustomers.*,\n            \tcustomer_contact_channels.contact_channel_id AS contact_channel_id,\n            \tcustomer_contact_channels.value AS contact_channel_value,\n            \tcontact_channels.name AS contact_channel_name\n            FROM\n            \tcustomers\n            \tINNER JOIN customer_contact_channels ON customer_contact_channels.customer_id = customers.id\n            \tINNER JOIN contact_channels ON contact_channels.id = customer_contact_channels.contact_channel_id\n            WHERE\n            \tmerchant_id = $1\n            \tAND contact_channels.name = $2\n            \tAND customer_contact_channels.value = $3\n            \tAND customers.deleted_at IS NULL\n            "
   },
   "f82798bb805cc332b387c9404879ae99c756c66e2462b8cec4d00d5d2017ed33": {
     "describe": {

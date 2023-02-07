@@ -190,7 +190,7 @@ pub async fn set_scheduler(
                 let mut tags = Vec::new();
                 tags.push(body.tag.unwrap());
 
-                let customers = match Customer::get_by_merchant_id(&db, &merchant_id, &tags).await {
+                let customers = match Customer::get_by_merchant_id_tags(&db, &merchant_id, &tags).await {
                     Ok(customers) => customers,
                     Err(err) => {
                         let body = DefaultResponse::error("get customers by tags failed", err.to_string())

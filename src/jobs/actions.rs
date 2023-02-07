@@ -14,7 +14,7 @@ use crate::{
         customer_contact_channel::CustomerContactChannel, invoice::Invoice, job_queue::JobQueue,
         job_schedule::JobSchedule,
     },
-    repositories::invoice::send_invoice_to_xendit, functions::whatsapp_send_message,
+    repositories::{invoice::send_invoice_to_xendit, whatsapp::whatsapp_send_message},
 };
 
 pub async fn set_job_schedule_to_queue(pool: PgPool) {
@@ -180,11 +180,7 @@ pub async fn prepare_via_channels(
             let datetime = schedule.last().unwrap();
 
             if datetime >= now {
-                match whatsapp_send_message(
-                    contact_channel.value.as_str(),
-                    message.as_str(),
-                )
-                .await
+                match whatsapp_send_message(contact_channel.value.as_str(), message.as_str()).await
                 {
                     Ok(_) => (),
                     Err(_) => {
