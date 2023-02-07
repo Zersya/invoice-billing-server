@@ -23,12 +23,18 @@ processes = []
   PG_POOLMINSIZE="15"
   PG_POOLMAXSIZE="30"
 
+  REDIS_CONNECTION="redis://default:23f50333cef84eea8ab1d6dc51c86540@fly-divine-river-2631.upstash.io"
+  REDIS_PASSWORD="aHyT82DjqQe5hcKc"
+
   EMAIL_SENDGRID_API_KEY="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"
+  TELEGRAM_SECRET_TOKEN="gaTGUZkEWm5moChKV4jg"
+  TELEGRAM_BOT_TOKEN="6098788392:AAH_C3oQpZXEBuwliDJcQzO5Rcj6J_JD3bs"
+  TELEGRAM_BASE_URL="https://api.telegram.org"
 
   WHATSAPP_API_KEY="YOUR_API_KEY"
   WHATSAPP_BASE_URL="https://simple-whatsapp-api.fly.dev"
 
-  XENDIT_BASE_URL="https://api.xendit.co/"
+  XENDIT_BASE_URL="https://api.xendit.co"
   XENDIT_SECRET_KEY="xnd_development_ShRPLTwbXDfpDbdlGDuWnSKpsrpoat1n9puePOFiti1IoJAWrQ74BOAJOjNAg"
   XENDIT_PUBLIC_KEY="xnd_public_development_qBP1UP8iyzc3DKczjoz1pRGANVHv5Pavy99n0t0rL6LtS0ihxY16jg2hUMllC"
 

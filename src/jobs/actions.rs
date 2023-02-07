@@ -1,6 +1,5 @@
 use std::ops::Add;
 
-use axum::http::HeaderValue;
 use chrono::{Duration, Utc};
 use cron::Schedule;
 use lettre::{transport::smtp::authentication::Credentials, Message, SmtpTransport, Transport};
