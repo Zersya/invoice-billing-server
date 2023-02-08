@@ -17,7 +17,7 @@ use crate::models::requests::customer::{
 };
 use crate::models::responses::DefaultResponse;
 
-use super::verification::{setup_verification};
+use super::verification::setup_verification;
 
 pub async fn get_by_authenticated_user(
     State(db): State<PgPool>,
@@ -56,7 +56,7 @@ pub async fn get_by_merchant_id(
         None => Vec::new(),
     };
 
-    let customers = match Customer::get_by_merchant_id(&db, &merchant_id, &tags).await {
+    let customers = match Customer::get_by_merchant_id_tags(&db, &merchant_id, &tags).await {
         Ok(customers) => customers,
         Err(err) => {
             let body = DefaultResponse::error("get customers failed", err.to_string()).into_json();
@@ -126,6 +126,13 @@ pub async fn create(
         contact_value
     };
 
+    // replace first @ with empty
+    let contact_value: String = if contact_value.starts_with("@") {
+        contact_channel_value.replace("@", "")
+    } else {
+        contact_value
+    };
+
     match CustomerContactChannel::create_using_transaction(
         &mut db_transaction,
         &customer.id,
@@ -155,7 +162,7 @@ pub async fn create(
 
     let contact_channel = match ContactChannel::get_by_id(&db, &contact_channel_id).await {
         Ok(contact_channel) => contact_channel,
-        Err(err) => {
+        Err(_) => {
             let body = DefaultResponse::ok("create customer success")
                 .with_data(json!(customer))
                 .into_json();
@@ -164,21 +171,23 @@ pub async fn create(
         }
     };
 
-    match setup_verification(
-        &db,
-        None,
-        Some(customer.id),
-        contact_channel.name,
-        contact_value,
-    )
-    .await
-    {
-        Ok(_) => (),
-        Err(err) => {
-            let body =
-                DefaultResponse::error("create customer failed", err.to_string()).into_json();
+    if contact_channel.name != "telegram" {
+        match setup_verification(
+            &db,
+            None,
+            Some(customer.id),
+            contact_channel.name,
+            contact_value,
+        )
+        .await
+        {
+            Ok(_) => (),
+            Err(err) => {
+                let body =
+                    DefaultResponse::error("create customer failed", err.to_string()).into_json();
 
-            return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+                return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+            }
         }
     }
 

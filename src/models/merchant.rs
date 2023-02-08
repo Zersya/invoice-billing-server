@@ -14,7 +14,8 @@ pub struct Merchant {
     pub address: Option<String>,
     pub phone_country_code: Option<String>,
     pub phone_number: Option<String>,
-    pub tax: Option<f32>
+    pub tax: Option<f32>,
+    pub merchant_code: Option<String>
 }
 
 impl Merchant {
@@ -136,5 +137,23 @@ impl Merchant {
         .await?;
 
         Ok(merchant)
+    }
+
+    pub async fn get_by_merchant_code(
+            db: &sqlx::PgPool,
+            merchant_code: &String,
+            ) -> Result<Merchant, sqlx::Error> {
+        let merchants = sqlx::query_as!(
+                Merchant,
+            r#"
+            SELECT * FROM merchants
+            WHERE merchant_code = $1 AND deleted_at IS NULL
+            "#,
+            merchant_code
+        )
+        .fetch_one(db)
+        .await?;
+
+        Ok(merchants)
     }
 }

@@ -11,6 +11,7 @@ pub struct CustomerContactChannel {
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
     pub deleted_at: Option<NaiveDateTime>,
+    pub additional_value: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -19,6 +20,7 @@ pub struct CustomerContactChannelWithContactChannel {
     pub customer_id: Uuid,
     pub value: String,
     pub name: String,
+    pub additional_value: Option<String>,
 }
 
 impl CustomerContactChannel {
@@ -57,7 +59,8 @@ impl CustomerContactChannel {
                 a.id,
                 a.customer_id,
                 a.value,
-                c.name
+                c.name,
+                a.additional_value
             FROM
                 customer_contact_channels a
                 LEFT JOIN customers b ON b.id = a.customer_id
@@ -74,5 +77,27 @@ impl CustomerContactChannel {
         .await?;
 
         Ok(customer_contact_channels)
+    }
+
+    pub async fn update_additional_value(
+        db: &sqlx::PgPool,
+        id: &Uuid,
+        additional_value: &String,
+    ) -> Result<CustomerContactChannel, sqlx::Error> {
+        let customer = sqlx::query_as!(
+            CustomerContactChannel,
+            r#"
+            UPDATE customer_contact_channels
+            SET additional_value = $1
+            WHERE id = $2 AND deleted_at IS NULL
+            RETURNING *
+            "#,
+            additional_value,
+            id
+        )
+        .fetch_one(db)
+        .await?;
+
+        Ok(customer)
     }
 }
