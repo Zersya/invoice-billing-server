@@ -121,7 +121,7 @@ pub async fn telegram(
             let merchant = match Merchant::get_by_merchant_code(&db, &payload.message.text).await {
                 Ok(merchant) => merchant,
                 Err(err) => {
-                    let msg = "Merchant not found";
+                    let msg = "The merchant code is not valid, please check again.";
                     telegram_send_message(&payload.message.chat.id, &msg)
                         .await
                         .unwrap();
@@ -142,7 +142,7 @@ pub async fn telegram(
             {
                 Ok(result) => result,
                 Err(err) => {
-                    let msg = "Customer not found";
+                    let msg = "You're not registered in this merchant, please ask admin to register your telegram username.";
                     telegram_send_message(&payload.message.chat.id, &msg)
                         .await
                         .unwrap();

@@ -17,7 +17,7 @@ use crate::models::requests::customer::{
 };
 use crate::models::responses::DefaultResponse;
 
-use super::verification::{setup_verification};
+use super::verification::setup_verification;
 
 pub async fn get_by_authenticated_user(
     State(db): State<PgPool>,
@@ -164,21 +164,23 @@ pub async fn create(
         }
     };
 
-    match setup_verification(
-        &db,
-        None,
-        Some(customer.id),
-        contact_channel.name,
-        contact_value,
-    )
-    .await
-    {
-        Ok(_) => (),
-        Err(err) => {
-            let body =
-                DefaultResponse::error("create customer failed", err.to_string()).into_json();
+    if contact_channel.name != "telegram" {
+        match setup_verification(
+            &db,
+            None,
+            Some(customer.id),
+            contact_channel.name,
+            contact_value,
+        )
+        .await
+        {
+            Ok(_) => (),
+            Err(err) => {
+                let body =
+                    DefaultResponse::error("create customer failed", err.to_string()).into_json();
 
-            return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+                return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+            }
         }
     }
 
