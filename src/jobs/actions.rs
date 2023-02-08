@@ -14,7 +14,10 @@ use crate::{
         customer_contact_channel::CustomerContactChannel, invoice::Invoice, job_queue::JobQueue,
         job_schedule::JobSchedule,
     },
-    repositories::{invoice::send_invoice_to_xendit, whatsapp::whatsapp_send_message},
+    repositories::{
+        invoice::send_invoice_to_xendit, telegram::telegram_send_message,
+        whatsapp::whatsapp_send_message,
+    },
 };
 
 pub async fn set_job_schedule_to_queue(pool: PgPool) {
@@ -210,6 +213,30 @@ pub async fn prepare_via_channels(
             match mailer.send(&email) {
                 Ok(_) => println!("Email sent successfully!"),
                 Err(e) => panic!("Could not send email: {:?}", e),
+            }
+        } else if contact_channel.name == "telegram" {
+            let chat_id = if contact_channel.additional_value.is_some() {
+                contact_channel
+                    .additional_value
+                    .clone()
+                    .unwrap()
+                    .parse::<i64>()
+                    .expect("format contact value invalid")
+            } else {
+                return Err(Errors::new(&[(
+                    "no_additional_value",
+                    "No additional value registered",
+                )]));
+            };
+
+            match telegram_send_message(&chat_id, message.as_str()).await {
+                Ok(_) => (),
+                Err(_) => {
+                    return Err(Errors::new(&[(
+                        "prepare_via_channels",
+                        "Failed to send message",
+                    )]));
+                }
             }
         }
     }

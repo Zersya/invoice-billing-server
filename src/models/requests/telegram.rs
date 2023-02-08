@@ -2,28 +2,28 @@ use serde::Deserialize;
 use validator_derive::Validate;
 #[derive(Deserialize, Validate, Debug)]
 pub struct TelegramUpdateItem {
-    pub update_id: i64,
-    pub message: TelegramMessage,
+    pub update_id: Option<i64>,
+    pub message: Option<TelegramMessage>,
 }
 #[derive(Deserialize, Validate, Debug)]
 pub struct TelegramMessage {
-    pub message_id: i64,
-    pub from: TelegramUser,
-    pub chat: TelegramChat,
-    pub date: i64,
-    pub text: String,
+    pub message_id: Option<i64>,
+    pub from: Option<TelegramUser>,
+    pub chat: Option<TelegramChat>,
+    pub date: Option<i64>,
+    pub text: Option<String>,
 }
 #[derive(Deserialize, Validate, Debug)]
 pub struct TelegramUser {
-    pub id: i64,
-    pub is_bot: bool,
-    pub first_name: String,
-    pub username: String,
-    pub language_code: String,
+    pub id: Option<i64>,
+    pub is_bot: Option<bool>,
+    pub first_name: Option<String>,
+    pub username: Option<String>,
+    pub language_code: Option<String>,
 }
 #[derive(Deserialize, Validate, Debug)]
 pub struct TelegramChat {
-    pub id: i64,
-    pub first_name: String,
-    pub username: String,
+    pub id: Option<i64>,
+    pub first_name: Option<String>,
+    pub username: Option<String>,
 }
