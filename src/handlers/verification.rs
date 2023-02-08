@@ -147,7 +147,7 @@ pub async fn setup_verification(
         };
     } else if contact_channel_name == "whatsapp" {
         let message = format!(
-            "Hi {}, please verify your account by clicking this link: {}",
+            "Hi {}, please verify your registration by clicking this link: {}",
             recepient_name, url_verification
         );
         match whatsapp_send_message(contact_value.as_str(), message.as_str()).await {
@@ -159,26 +159,25 @@ pub async fn setup_verification(
                 });
             }
         }
+    } else if contact_channel_name == "telegram" {
+        let message = format!(
+            "Hi {}, please verify your registration by clicking this link: {}",
+            recepient_name, url_verification
+        );
+        let parsed_chat_id = contact_value
+            .parse::<i64>()
+            .expect("format contact value invalid");
+
+        match telegram_send_message(&parsed_chat_id, message.as_str()).await {
+            Ok(_) => (),
+            Err(err) => {
+                return Err(DefaultError {
+                    value: "setup verification error".to_string(),
+                    message: err.to_string(),
+                });
+            }
+        }
     }
-//    else if contact_channel_name == "telegram" {
-//        let message = format!(
-//            "Hi {}, please verify your account by clicking this link: {}",
-//            recepient_name, url_verification
-//        );
-//        let parsed_chat_id = contact_value
-//            .parse::<i64>()
-//            .expect("format contact value invalid");
-//
-//        match telegram_send_message(&parsed_chat_id, message.as_str()).await {
-//            Ok(_) => (),
-//            Err(err) => {
-//                return Err(DefaultError {
-//                    value: "setup verification error".to_string(),
-//                    message: err.to_string(),
-//                });
-//            }
-//        }
-//    }
 
     Ok(())
 }
