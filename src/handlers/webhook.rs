@@ -1,4 +1,5 @@
 use crate::models::customer::Customer;
+use crate::models::customer_contact_channel::CustomerContactChannel;
 use crate::models::merchant::Merchant;
 use crate::models::requests::telegram::TelegramUpdateItem;
 use crate::models::responses::DefaultResponse;
@@ -165,6 +166,28 @@ pub async fn telegram(
                 Ok(_) => Some(()),
                 Err(err) => {
                     let msg = "Unable to sent verification";
+                    telegram_send_message(&payload.message.chat.id, &msg)
+                        .await
+                        .unwrap();
+
+                    let body = DefaultResponse::error(&msg, err.to_string()).into_json();
+
+                    return (StatusCode::OK, body).into_response();
+                }
+            };
+
+            println!("{}", customer.contact_channel_id);
+
+            match CustomerContactChannel::update_additional_value(
+                &db,
+                &customer.customer_contact_channel_id,
+                &payload.message.chat.id.to_string(),
+            )
+            .await
+            {
+                Ok(result) => result,
+                Err(err) => {
+                    let msg = "Unable to get customer contact channel";
                     telegram_send_message(&payload.message.chat.id, &msg)
                         .await
                         .unwrap();

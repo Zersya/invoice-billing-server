@@ -126,6 +126,13 @@ pub async fn create(
         contact_value
     };
 
+    // replace first @ with empty
+    let contact_value: String = if contact_value.starts_with("@") {
+        contact_channel_value.replace("@", "")
+    } else {
+        contact_value
+    };
+
     match CustomerContactChannel::create_using_transaction(
         &mut db_transaction,
         &customer.id,
@@ -155,7 +162,7 @@ pub async fn create(
 
     let contact_channel = match ContactChannel::get_by_id(&db, &contact_channel_id).await {
         Ok(contact_channel) => contact_channel,
-        Err(err) => {
+        Err(_) => {
             let body = DefaultResponse::ok("create customer success")
                 .with_data(json!(customer))
                 .into_json();

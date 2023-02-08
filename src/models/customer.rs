@@ -26,6 +26,7 @@ pub struct CustomerWithContactChannels {
     pub tags: Vec<String>,
     pub verified_at: Option<NaiveDateTime>,
     pub contact_channel_id: Uuid,
+    pub customer_contact_channel_id: Uuid,
     pub contact_channel_value: String,
     pub contact_channel_name: String,
 }
@@ -134,6 +135,7 @@ impl Customer {
             SELECT
                 customers.*,
                 customer_contact_channels.contact_channel_id as contact_channel_id,
+                customer_contact_channels.id as customer_contact_channel_id,
                 customer_contact_channels.value as contact_channel_value,
                 contact_channels.name as contact_channel_name
             FROM
@@ -166,6 +168,7 @@ impl Customer {
              SELECT
             	customers.*,
             	customer_contact_channels.contact_channel_id AS contact_channel_id,
+                customer_contact_channels.id as customer_contact_channel_id,
             	customer_contact_channels.value AS contact_channel_value,
             	contact_channels.name AS contact_channel_name
             FROM
