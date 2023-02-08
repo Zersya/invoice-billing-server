@@ -8,6 +8,7 @@ use validator::{Validate, ValidationError, ValidationErrors, ValidationErrorsKin
 
 use crate::models::responses::{DefaultResponse, Message};
 
+#[derive(Debug)]
 pub struct DefaultError {
     pub value: String,
     pub message: String,
