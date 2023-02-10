@@ -5,20 +5,21 @@ use std::net::SocketAddr;
 use std::str::FromStr;
 
 use axum::{
-    http::Method,
+    http::{HeaderValue, Method},
     routing::{get, post, put},
     Router,
 };
 
 use dotenvy::dotenv;
 use sqlx::postgres::PgPoolOptions;
-use tower_http::cors::CorsLayer;
+use tower_http::cors::{CorsLayer, AllowOrigin};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use crate::jobs::spawns::{spawn_job_queue, spawn_set_job_schedule_to_queue};
 
 mod config;
 mod errors;
+mod functions;
 mod handlers;
 mod jobs;
 mod logger;
@@ -26,7 +27,6 @@ mod middlewares;
 mod models;
 mod repositories;
 mod utils;
-mod functions;
 
 pub async fn axum() {
     // tracing_subscriber::registry()
@@ -58,15 +58,14 @@ pub async fn axum() {
     let merchant_middleware =
         axum::middleware::from_fn_with_state(pool.clone(), middlewares::merchant::check_merchant);
 
-    let check_headers =
-        axum::middleware::from_fn(middlewares::headers::check_headers);
+    let check_headers = axum::middleware::from_fn(middlewares::headers::check_headers);
 
     let origins = [
-        "http://localhost:5173".parse().unwrap(),
-        "http://maresto.id".parse().unwrap(),
-        "http://inving.id".parse().unwrap(),
-        "http://vercel.app".parse().unwrap(),
-        "http://api.telegram.org".parse().unwrap(),
+        "http://localhost:5173".parse::<HeaderValue>().unwrap(),
+        "http://maresto.id".parse::<HeaderValue>().unwrap(),
+        "https://app.inving.co".parse::<HeaderValue>().unwrap(),
+        "https://invoice-billing-web.vercel.app".parse::<HeaderValue>().unwrap(),
+        "http://api.telegram.org".parse::<HeaderValue>().unwrap(),
     ];
 
     let app = Router::with_state(pool.clone())
