@@ -12,7 +12,7 @@ use axum::{
 
 use dotenvy::dotenv;
 use sqlx::postgres::PgPoolOptions;
-use tower_http::cors::{CorsLayer, AllowOrigin};
+use tower_http::cors::{AllowOrigin, CorsLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use crate::jobs::spawns::{spawn_job_queue, spawn_set_job_schedule_to_queue};
@@ -64,7 +64,9 @@ pub async fn axum() {
         "http://localhost:5173".parse::<HeaderValue>().unwrap(),
         "http://maresto.id".parse::<HeaderValue>().unwrap(),
         "https://app.inving.co".parse::<HeaderValue>().unwrap(),
-        "https://invoice-billing-web.vercel.app".parse::<HeaderValue>().unwrap(),
+        "https://invoice-billing-web.vercel.app"
+            .parse::<HeaderValue>()
+            .unwrap(),
         "http://api.telegram.org".parse::<HeaderValue>().unwrap(),
     ];
 
@@ -116,7 +118,9 @@ pub async fn axum() {
         )
         .route(
             "/merchant/:id",
-            put(handlers::merchant::update).delete(handlers::merchant::delete),
+            get(handlers::merchant::get_by_id)
+                .put(handlers::merchant::update)
+                .delete(handlers::merchant::delete),
         )
         .route_layer(merchant_middleware)
         .route(

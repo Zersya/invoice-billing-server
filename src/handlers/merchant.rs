@@ -13,6 +13,33 @@ use serde_json::{json};
 use sqlx::PgPool;
 use uuid::Uuid;
 
+pub async fn get_by_id(
+    State(db): State<PgPool>,
+    Extension(user_id): Extension<Uuid>,
+    Path((merchant_id,)): Path<(Uuid,)>,
+) -> Response {
+    let merchant = match Merchant::get_by_id(&db, merchant_id).await {
+        Ok(merchant) => merchant,
+        Err(err) => {
+            let body = DefaultResponse::error("get merchant failed", err.to_string()).into_json();
+
+            return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+        }
+    };
+
+    if merchant.user_id != user_id {
+        let body = DefaultResponse::error("get merchant failed", "merchant not found".to_string()).into_json();
+
+        return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+    }
+
+    let body = DefaultResponse::ok("get merchant success")
+        .with_data(json!(merchant))
+        .into_json();
+
+    (StatusCode::OK, body).into_response()
+}
+
 pub async fn get_by_authenticated_user(
     State(db): State<PgPool>,
     Extension(user_id): Extension<Uuid>,
