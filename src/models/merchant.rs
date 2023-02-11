@@ -27,13 +27,14 @@ impl Merchant {
         address: Option<String>,
         phone_country_code: Option<String>,
         phone_number: Option<String>,
-        tax: Option<f32>
+        tax: Option<f32>,
+        code: &String,
     ) -> Result<Merchant, sqlx::Error> {
         let merchant = sqlx::query_as!(
             Merchant,
             r#"
-            INSERT INTO merchants (name, description, user_id, address, phone_country_code, phone_number, tax)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            INSERT INTO merchants (name, description, user_id, address, phone_country_code, phone_number, tax, merchant_code)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             RETURNING *
             "#,
             name,
@@ -42,7 +43,8 @@ impl Merchant {
             address,
             phone_country_code,
             phone_number,
-            tax
+            tax,
+            code
         )
         .fetch_one(db)
         .await?;
@@ -155,5 +157,13 @@ impl Merchant {
         .await?;
 
         Ok(merchants)
+    }
+
+    pub fn generate_merchant_code(name: &String) -> String {
+        let code: u32 = rand::random();
+        let code = code.to_string();
+        let code = &code[0..6];
+
+        format!("{}-{}", name, code)
     }
 }

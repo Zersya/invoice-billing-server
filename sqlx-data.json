@@ -412,6 +412,99 @@
     },
     "query": "\n            UPDATE job_schedules\n            SET job_data = $1\n            WHERE id = $2\n            RETURNING *\n            "
   },
+  "23b3b6be68f24559cbcff6bdc9e031ff7b710b2ecf2eaf249fb4c8d0c37d4397": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "name",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "description",
+          "ordinal": 2,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "user_id",
+          "ordinal": 3,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 4,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 5,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "deleted_at",
+          "ordinal": 6,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "address",
+          "ordinal": 7,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "phone_country_code",
+          "ordinal": 8,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "phone_number",
+          "ordinal": 9,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "tax",
+          "ordinal": 10,
+          "type_info": "Float4"
+        },
+        {
+          "name": "merchant_code",
+          "ordinal": 11,
+          "type_info": "Varchar"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "Varchar",
+          "Uuid",
+          "Varchar",
+          "Varchar",
+          "Varchar",
+          "Float4",
+          "Varchar"
+        ]
+      }
+    },
+    "query": "\n            INSERT INTO merchants (name, description, user_id, address, phone_country_code, phone_number, tax, merchant_code)\n            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)\n            RETURNING *\n            "
+  },
   "26e7e05427bc7dabcd7815d27764fda2baf4cfe60a2d2d6ee2a1f773dccbbce2": {
     "describe": {
       "columns": [
@@ -3931,98 +4024,6 @@
       }
     },
     "query": "\n            SELECT *\n            FROM verifications\n            WHERE user_id = $1\n            AND status = 'pending'\n            AND deleted_at IS NULL\n            "
-  },
-  "e020ebbcc2cd21f044c8733f7736b36e44d796014a9fbb74c46f53295d4df433": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "name",
-          "ordinal": 1,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "description",
-          "ordinal": 2,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "user_id",
-          "ordinal": 3,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "created_at",
-          "ordinal": 4,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "updated_at",
-          "ordinal": 5,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "deleted_at",
-          "ordinal": 6,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "address",
-          "ordinal": 7,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "phone_country_code",
-          "ordinal": 8,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "phone_number",
-          "ordinal": 9,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "tax",
-          "ordinal": 10,
-          "type_info": "Float4"
-        },
-        {
-          "name": "merchant_code",
-          "ordinal": 11,
-          "type_info": "Varchar"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true
-      ],
-      "parameters": {
-        "Left": [
-          "Varchar",
-          "Varchar",
-          "Uuid",
-          "Varchar",
-          "Varchar",
-          "Varchar",
-          "Float4"
-        ]
-      }
-    },
-    "query": "\n            INSERT INTO merchants (name, description, user_id, address, phone_country_code, phone_number, tax)\n            VALUES ($1, $2, $3, $4, $5, $6, $7)\n            RETURNING *\n            "
   },
   "e466919aedad9eababc593ccfe894fc1a78d74e49f7450434f3ec81dad847642": {
     "describe": {

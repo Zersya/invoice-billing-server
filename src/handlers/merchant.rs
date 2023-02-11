@@ -77,7 +77,10 @@ pub async fn create(
         Err(err) => return (StatusCode::UNPROCESSABLE_ENTITY, err.into_response()).into_response(),
     }
 
-    let merchant = match Merchant::create(&db, &name, &description, &user_id, address, body.phone_country_code, phone_number, tax).await {
+    // generate code merchant based on name and number
+    let code = Merchant::generate_merchant_code(&name);
+
+    let merchant = match Merchant::create(&db, &name, &description, &user_id, address, body.phone_country_code, phone_number, tax, &code).await {
         Ok(merchant) => merchant,
         Err(err) => {
             let body =
