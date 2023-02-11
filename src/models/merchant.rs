@@ -164,6 +164,6 @@ impl Merchant {
         let code = code.to_string();
         let code = &code[0..6];
 
-        format!("{}-{}", name, code)
+        format!("{}-{}", name, code).to_lowercase()
     }
 }
