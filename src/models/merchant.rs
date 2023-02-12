@@ -163,6 +163,7 @@ impl Merchant {
         let code: u32 = rand::random();
         let code = code.to_string();
         let code = &code[0..6];
+        let name = name.replace(" ", "-");
 
         format!("{}-{}", name, code).to_lowercase()
     }
