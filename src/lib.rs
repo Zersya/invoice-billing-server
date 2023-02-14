@@ -73,6 +73,15 @@ pub async fn axum() {
     let app = Router::with_state(pool.clone())
         .route("/users", get(handlers::user::get_users))
         .route(
+            "/merchant/:id/invoice/:id/add-item/:id",
+            put(handlers::invoice::update_item_to_invoice)
+            .delete(handlers::invoice::delete_item_to_invoice)
+        )
+        .route(
+            "/merchant/:id/invoice/:id/add-item",
+            post(handlers::invoice::add_item_to_invoice)
+        )
+        .route(
             "/merchant/:id/invoice/:id/set-schedule",
             put(handlers::invoice::set_invoice_scheduler),
         )

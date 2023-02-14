@@ -2,10 +2,11 @@ use std::ops::Add;
 
 use crate::models::customer::Customer;
 use crate::models::invoice::Invoice;
+use crate::models::item::Item;
 use crate::models::job_queue::JobQueue;
 use crate::models::job_schedule::JobSchedule;
 use crate::models::merchant::Merchant;
-use crate::models::requests::invoice::RequestCreateInvoice;
+use crate::models::requests::invoice::{RequestAddInvoiceItem, RequestCreateInvoice};
 use crate::models::requests::invoice_schedule::{
     RequestInvoiceSchedule, RequestSetStatusInvoiceSchedule,
 };
@@ -397,6 +398,115 @@ pub async fn set_invoice_scheduler(
 
     let body = DefaultResponse::ok("set invoice scheduler success")
         .with_data(json!(job_schedule))
+        .into_json();
+
+    (StatusCode::OK, body).into_response()
+}
+
+pub async fn add_item_to_invoice(
+    State(db): State<PgPool>,
+    Extension(user_id): Extension<Uuid>,
+    Path((_, invoice_id)): Path<(Uuid, Uuid)>,
+    Json(body): Json<RequestAddInvoiceItem>,
+) -> Response {
+    match validator::Validate::validate(&body) {
+        Ok(_) => (),
+        Err(err) => {
+            let body =
+                DefaultResponse::error(err.to_string().as_str(), err.to_string()).into_json();
+            return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+        }
+    }
+
+    let item = match Item::create(
+        &db,
+        &body.description.unwrap(),
+        &body.quantity.unwrap(),
+        &body.price.unwrap(),
+        &body.tax.unwrap(),
+        &body.discount.unwrap(),
+        &user_id,
+        &invoice_id,
+    )
+    .await
+    {
+        Ok(result) => result,
+        Err(err) => {
+            let body =
+                DefaultResponse::error("create item invoice failed", err.to_string()).into_json();
+
+            return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+        }
+    };
+
+    let body = DefaultResponse::ok("add item to invoice success")
+        .with_data(json!(item))
+        .into_json();
+
+    (StatusCode::OK, body).into_response()
+}
+
+pub async fn update_item_to_invoice(
+    State(db): State<PgPool>,
+    Extension(user_id): Extension<Uuid>,
+    Path((_, invoice_id, item_id)): Path<(Uuid, Uuid, Uuid)>,
+    Json(body): Json<RequestAddInvoiceItem>,
+) -> Response {
+    match validator::Validate::validate(&body) {
+        Ok(_) => (),
+        Err(err) => {
+            let body =
+                DefaultResponse::error(err.to_string().as_str(), err.to_string()).into_json();
+            return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+        }
+    }
+
+    let item = match Item::update(
+        &db,
+        &item_id,
+        &body.description.unwrap(),
+        &body.quantity.unwrap(),
+        &body.price.unwrap(),
+        &body.tax.unwrap(),
+        &body.discount.unwrap(),
+        &user_id,
+        &invoice_id,
+    )
+    .await
+    {
+        Ok(result) => result,
+        Err(err) => {
+            let body =
+                DefaultResponse::error("update item invoice failed", err.to_string()).into_json();
+
+            return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+        }
+    };
+
+    let body = DefaultResponse::ok("update item to invoice success")
+        .with_data(json!(item))
+        .into_json();
+
+    (StatusCode::OK, body).into_response()
+}
+
+pub async fn delete_item_to_invoice(
+    State(db): State<PgPool>,
+    Extension(_): Extension<Uuid>,
+    Path((_, invoice_id, item_id)): Path<(Uuid, Uuid, Uuid)>,
+) -> Response {
+    let item = match Item::delete(&db, &item_id, &invoice_id).await {
+        Ok(result) => result,
+        Err(err) => {
+            let body =
+                DefaultResponse::error("delete item invoice failed", err.to_string()).into_json();
+
+            return (StatusCode::UNPROCESSABLE_ENTITY, body).into_response();
+        }
+    };
+
+    let body = DefaultResponse::ok("delete item to invoice success")
+        .with_data(json!(item))
         .into_json();
 
     (StatusCode::OK, body).into_response()

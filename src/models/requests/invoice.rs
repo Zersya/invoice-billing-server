@@ -25,3 +25,17 @@ impl RequestCreateInvoice {
         )
     }
 }
+
+#[derive(Deserialize, Validate, Debug)]
+pub struct RequestAddInvoiceItem {
+    #[validate(required)]
+    pub description: Option<String>,
+    #[validate(required)]
+    pub quantity: Option<i32>,
+    #[validate(required)]
+    pub price: Option<i32>,
+    #[validate(required, range(min = 0.0, max = 1))]
+    pub tax: Option<f32>,
+    #[validate(required, range(min = 0.0, max = 1))]
+    pub discount: Option<f32>,
+}

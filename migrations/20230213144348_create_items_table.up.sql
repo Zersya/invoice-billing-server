@@ -1,8 +1,8 @@
-CREATE TABLE subitems (
+CREATE TABLE items (
     id uuid DEFAULT uuid_generate_v4(),
     description VARCHAR(255) NOT NULL,
     quantity INTEGER NOT NULL,
-    price NUMERIC(10,2) NOT NULL,
+    price INTEGER NOT NULL,
     tax FLOAT4 NOT NULL,
     discount FLOAT4 NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
