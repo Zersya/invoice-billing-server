@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use uuid::Uuid;
 
+use super::item::SimpleItem;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Invoice {
@@ -24,18 +25,21 @@ pub struct Invoice {
     pub description: Option<String>,
 }
 
-#[derive(Serialize, Debug)]
-pub struct InvoiceWithCustomer {
+#[derive(Serialize, Deserialize, Debug)]
+pub struct InvoiceWithCustomerItems {
     pub id: Uuid,
     pub invoice_number: String,
     pub customer_id: Uuid,
     pub customer_name: String,
     pub total_amount: i32,
+    pub tax_amount: i32,
+    pub tax_rate: i32,
     pub invoice_date: NaiveDateTime,
     pub created_at: NaiveDateTime,
     pub job_schedule: Option<Value>,
     pub title: Option<String>,
     pub description: Option<String>,
+    pub items: Option<Vec<SimpleItem>>
 }
 
 impl Invoice {
@@ -140,9 +144,9 @@ impl Invoice {
     pub async fn get_by_merchat_user_id(
         db: &sqlx::PgPool,
         user_id: &Uuid,
-    ) -> Result<Vec<InvoiceWithCustomer>, sqlx::Error> {
+    ) -> Result<Vec<InvoiceWithCustomerItems>, sqlx::Error> {
         let invoices = sqlx::query_as!(
-            InvoiceWithCustomer,
+            InvoiceWithCustomerItems,
             r#"
             SELECT 
                 invoices.id, 
@@ -150,17 +154,22 @@ impl Invoice {
                 invoices.customer_id, 
                 customers.name as customer_name, 
                 invoices.total_amount, 
+                invoices.tax_amount,
+                invoices.tax_rate,
                 invoices.invoice_date, 
                 invoices.created_at, 
                 row_to_json(job_schedules) as job_schedule,
                 invoices.title,
-                invoices.description 
+                invoices.description,
+                coalesce(array_agg(items), '{}') AS "items: Vec<SimpleItem>"
             FROM invoices
                 INNER JOIN merchants ON merchants.id = invoices.merchant_id
                 INNER JOIN users ON users.id = merchants.user_id
                 INNER JOIN customers ON customers.id = invoices.customer_id
                 LEFT JOIN job_schedules ON job_schedules.job_data->>'invoice_id' = invoices.id::text
+                LEFT JOIN items ON items.invoice_id = invoices.id
             WHERE users.id = $1 AND invoices.deleted_at IS NULL AND customers.deleted_at IS NULL AND invoices.invoice_date > NOW() - INTERVAL '2 month'
+            GROUP BY invoices.id, customer_name, job_schedules.*
             ORDER BY invoices.invoice_date DESC
             "#,
             user_id
@@ -174,9 +183,9 @@ impl Invoice {
     pub async fn get_by_merchant_id(
         db: &sqlx::PgPool,
         merchant_id: &Uuid,
-    ) -> Result<Vec<InvoiceWithCustomer>, sqlx::Error> {
+    ) -> Result<Vec<InvoiceWithCustomerItems>, sqlx::Error> {
         let invoices = sqlx::query_as!(
-            InvoiceWithCustomer,
+            InvoiceWithCustomerItems,
             r#"
             SELECT 
                 invoices.id, 
@@ -184,15 +193,20 @@ impl Invoice {
                 invoices.customer_id, 
                 customers.name as customer_name, 
                 invoices.total_amount, 
+                invoices.tax_amount,
+                invoices.tax_rate,
                 invoices.invoice_date, 
                 invoices.created_at, 
                 row_to_json(job_schedules) as job_schedule,
                 invoices.title,
-                invoices.description
+                invoices.description,
+                coalesce(array_agg(items), '{}') AS "items: Vec<SimpleItem>"
             FROM invoices
                 INNER JOIN customers ON customers.id = invoices.customer_id
                 LEFT JOIN job_schedules ON job_schedules.job_data->>'invoice_id' = invoices.id::text
+                INNER JOIN items ON items.invoice_id = invoices.id
             WHERE invoices.merchant_id = $1 AND invoices.deleted_at IS NULL AND customers.deleted_at IS NULL AND invoices.invoice_date > NOW() - INTERVAL '2 month'
+            GROUP BY invoices.id, customer_name, job_schedules.*
             ORDER BY invoices.invoice_date DESC
             "#,
             merchant_id
